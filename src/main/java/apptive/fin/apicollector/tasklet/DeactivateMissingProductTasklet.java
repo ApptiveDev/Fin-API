@@ -23,11 +23,13 @@ public class DeactivateMissingProductTasklet implements Tasklet {
             StepContribution contribution,
             ChunkContext chunkContext
     ) {
-        log.info(
-                "DeactivateMissingProductTasklet skipped. source={}, rawCount={}",
-                properties.source(),
-                productRawRepository.count()
-        );
+//        log.info(
+//                "DeactivateMissingProductTasklet skipped. source={}, rawCount={}",
+//                properties.source(),
+//                productRawRepository.count()
+//        );
+
+
         return RepeatStatus.FINISHED;
     }
 }
