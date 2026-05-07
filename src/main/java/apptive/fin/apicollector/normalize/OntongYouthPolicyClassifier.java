@@ -1,9 +1,12 @@
 package apptive.fin.apicollector.normalize;
 
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import tools.jackson.databind.JsonNode;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class OntongYouthPolicyClassifier extends AbstractProductNormalizer {
@@ -29,19 +32,44 @@ public class OntongYouthPolicyClassifier extends AbstractProductNormalizer {
             "비과세",
             "청약",
             "주택드림",
-            "분양"
+            "분양",
+            "통장"
+    );
+
+    private static final Map<String, Integer> FINANCIAL_KEY_MAP = Map.ofEntries(
+            Map.entry("통장", 6),
+            Map.entry("적금", 5),
+            Map.entry("예금", 5),
+            Map.entry("저축", 3),
+            Map.entry("자산형성", 4),
+            Map.entry("계좌", 4),
+            Map.entry("내일저축", 7),
+            Map.entry("미래적금", 7),
+            Map.entry("청년도약계좌", 7),
+            Map.entry("내일채움", 5),
+            Map.entry("주택드림", 6),
+            Map.entry("청약", 3),
+            Map.entry("비과세", 4),
+            Map.entry("기여금", 3),
+            Map.entry("적립", 2),
+            Map.entry("납입", 2),
+            Map.entry("매칭", 1),
+            Map.entry("분양", 1)
     );
 
     public ProductClassification classify(JsonNode policy) {
-        if (!isFinanceCandidate(policy)) {
-            return ProductClassification.EXCLUDED;
-        }
+//        if (!isFinanceCandidate(policy)) {
+//            return ProductClassification.EXCLUDED;
+//        }
 
         if (isLoan(policy)) {
             return ProductClassification.LOAN_EXCLUDED;
         }
 
-        if (hasFinancialKeyword(policy)) {
+//        if (hasFinancialKeyword(policy)) {
+//            return ProductClassification.FINANCIAL_PRODUCT;
+//        }
+        if (financeScore(policy) >= 6) {
             return ProductClassification.FINANCIAL_PRODUCT;
         }
 
@@ -52,8 +80,8 @@ public class OntongYouthPolicyClassifier extends AbstractProductNormalizer {
         String category = text(policy, "mclsfNm");
         String keywords = text(policy, "plcyKywdNm");
 
-        return FINANCE_CATEGORY.equals(category)
-                || contains(keywords, SUBSIDY_KEYWORD);
+        return FINANCE_CATEGORY.equals(category);
+//                || contains(keywords, SUBSIDY_KEYWORD);
     }
 
     private boolean isLoan(JsonNode policy) {
@@ -67,6 +95,25 @@ public class OntongYouthPolicyClassifier extends AbstractProductNormalizer {
     private boolean hasFinancialKeyword(JsonNode policy) {
         String supportContent = text(policy, "plcySprtCn");
         return FINANCIAL_KEYWORDS.stream().anyMatch(keyword -> contains(supportContent, keyword));
+    }
+
+    private int financeScore(JsonNode policy) {
+        Map<String, Integer> keywordsMap = new HashMap<>();
+        String supportContent = text(policy, "plcySprtCn");
+        String category = text(policy, "mclsfNm");
+        String keywords = text(policy, "plcyKywdNm");
+        String name = text(policy, "plcyNm");
+
+//        for (String keyword : LOAN_METHOD_CODES) {
+//            keywordsMap.put(keyword, StringUtils.countOccurrencesOf(supportContent, keyword));
+//        }
+        return FINANCIAL_KEY_MAP
+                .keySet()
+                .stream()
+                .map((keyword)->StringUtils.countOccurrencesOf(name, keyword) * FINANCIAL_KEY_MAP.get(keyword))
+                .reduce(Integer::sum)
+                .orElse(0);
+
     }
 
     private boolean hasCode(String rawCode, String targetCode) {
