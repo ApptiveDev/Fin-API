@@ -165,4 +165,8 @@ public class Product extends BaseTimeEntity {
     public void markUnjoinable() {
         this.isJoinable = false;
     }
+
+    public void markJoinable() {
+        this.isJoinable = true;
+    }
 }
