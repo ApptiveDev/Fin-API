@@ -8,7 +8,7 @@ import lombok.Builder;
 import java.math.BigDecimal;
 import java.util.List;
 
-@Builder
+@Builder(toBuilder = true)
 public record ProductDraft(
         Long rawId,
         Source rawSource,

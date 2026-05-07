@@ -94,6 +94,10 @@ abstract class AbstractProductNormalizer {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
+    protected List<KeywordValueEnum> extractKeywords(ProductDraft productDraft) {
+        return List.of();
+    }
+
     protected List<KeywordValueEnum> keywordsFromText(String... values) {
         Set<KeywordValueEnum> keywords = EnumSet.noneOf(KeywordValueEnum.class);
         List<String> nonBlankValues = new ArrayList<>();

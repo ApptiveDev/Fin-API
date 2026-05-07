@@ -2,6 +2,7 @@ package apptive.fin.apicollector.normalize;
 
 import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.config.CollectorProperties;
+import apptive.fin.apicollector.normalize.extractor.MonthlyLimitExtractor;
 import apptive.fin.apicollector.product.ProductType;
 import apptive.fin.apicollector.raw.ProductRaw;
 import lombok.RequiredArgsConstructor;
