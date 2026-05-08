@@ -15,47 +15,51 @@ public class OntongYouthPolicyClassifier extends AbstractProductNormalizer {
     private static final String SUBSIDY_KEYWORD = "보조금";
     private static final String LOAN_KEYWORD = "대출";
     private static final List<String> LOAN_METHOD_CODES = List.of("42003", "42007");
-    private static final List<String> FINANCIAL_KEYWORDS = List.of(
-            "저축",
-            "적금",
-            "예금",
-            "자산형성",
-            "매칭",
+//    private static final List<String> FINANCIAL_KEYWORDS = List.of(
+//            "저축",
+//            "적금",
+//            "예금",
+//            "자산형성",
+//            "매칭",
 //            "장려금",
-            "기여금",
-            "적립",
-            "내일채움",
-            "내일저축",
-            "미래적금",
-            "납입",
+//            "기여금",
+//            "적립",
+//            "내일채움",
+//            "내일저축",
+//            "미래적금",
+//            "납입",
 //            "목돈",
-            "비과세",
-            "청약",
-            "주택드림",
-            "분양",
-            "통장"
-    );
+//            "비과세",
+//            "청약",
+//            "주택드림",
+//            "분양",
+//            "통장"
+//    );
 
     private static final Map<String, Integer> FINANCIAL_KEY_MAP = Map.ofEntries(
-            Map.entry("통장", 6),
-            Map.entry("적금", 5),
-            Map.entry("예금", 5),
+            Map.entry("통장", 60),
+            Map.entry("적금", 50),
+            Map.entry("예금", 50),
             Map.entry("저축", 3),
             Map.entry("자산형성", 4),
             Map.entry("계좌", 4),
-            Map.entry("내일저축", 7),
-            Map.entry("미래적금", 7),
-            Map.entry("청년도약계좌", 7),
-            Map.entry("내일채움", 5),
-            Map.entry("주택드림", 6),
+            Map.entry("내일저축", 70),
+            Map.entry("미래적금", 70),
+            Map.entry("청년도약계좌", 70),
+            Map.entry("내일채움", 50),
+            Map.entry("주택드림", 60),
             Map.entry("청약", 3),
             Map.entry("비과세", 4),
             Map.entry("기여금", 3),
+            Map.entry("공제", 4),
             Map.entry("적립", 2),
             Map.entry("납입", 2),
             Map.entry("매칭", 1),
             Map.entry("분양", 1)
     );
+
+
+
 
     public ProductClassification classify(JsonNode policy) {
 //        if (!isFinanceCandidate(policy)) {
@@ -92,10 +96,10 @@ public class OntongYouthPolicyClassifier extends AbstractProductNormalizer {
                 || LOAN_METHOD_CODES.stream().anyMatch(code -> hasCode(methodCode, code));
     }
 
-    private boolean hasFinancialKeyword(JsonNode policy) {
-        String supportContent = text(policy, "plcySprtCn");
-        return FINANCIAL_KEYWORDS.stream().anyMatch(keyword -> contains(supportContent, keyword));
-    }
+//    private boolean hasFinancialKeyword(JsonNode policy) {
+//        String supportContent = text(policy, "plcySprtCn");
+//        return FINANCIAL_KEYWORDS.stream().anyMatch(keyword -> contains(supportContent, keyword));
+//    }
 
     private int financeScore(JsonNode policy) {
         Map<String, Integer> keywordsMap = new HashMap<>();
