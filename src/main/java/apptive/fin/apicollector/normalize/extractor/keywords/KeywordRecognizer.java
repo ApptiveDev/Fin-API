@@ -5,8 +5,25 @@ import apptive.fin.apicollector.product.KeywordValueEnum;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface KeywordRecognizer {
-    // 어떤 키워드를 인식하면 true, 아니면 false
     List<KeywordValueEnum> recognize(ProductDraft productDraft);
+    default void addIfContains(
+            Set<KeywordValueEnum> keywords,
+            String value,
+            KeywordValueEnum keyword,
+            String... tokens
+    ) {
+        if (value == null) {
+            return;
+        }
+
+        for (String token : tokens) {
+            if (value.contains(token) || value.matches(token)) {
+                keywords.add(keyword);
+                return;
+            }
+        }
+    }
 }
