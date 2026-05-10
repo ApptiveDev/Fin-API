@@ -3,7 +3,7 @@ package apptive.fin.apicollector.tasklet;
 import apptive.fin.apicollector.Mode;
 import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.config.CollectorProperties;
-import apptive.fin.apicollector.product.ProductSyncService;
+import apptive.fin.apicollector.product.service.ProductSyncService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;

@@ -32,7 +32,7 @@ public class OntongYouthProductNormalizer extends AbstractProductNormalizer impl
             return skippedDraft(rawProduct, classification);
         }
 
-        String providerName = firstText(raw, "sprvsnInstCdNm", "rgtrInstCdNm", "rgtrUpInstCdNm");
+        String providerName = firstText(raw, "rgtrInstCdNm", "sprvsnInstCdNm" , "rgtrUpInstCdNm");
         String providerCode = firstText(raw, "sprvsnInstCd", "rgtrInstCd", "rgtrUpInstCd", "sprvsnInstCdNm", "rgtrInstCdNm");
         String productName = firstText(raw, "plcyNm");
         String supportContent = text(raw, "plcySprtCn");

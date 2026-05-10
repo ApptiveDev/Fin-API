@@ -2,7 +2,7 @@ package apptive.fin.apicollector.tasklet;
 
 import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.config.CollectorProperties;
-import apptive.fin.apicollector.product.ProductSyncService;
+import apptive.fin.apicollector.product.service.ProductSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.scope.context.ChunkContext;

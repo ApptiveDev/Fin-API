@@ -1,4 +1,4 @@
-package apptive.fin.apicollector.product;
+package apptive.fin.apicollector.product.repository;
 
 import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.product.entity.Product;
@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {

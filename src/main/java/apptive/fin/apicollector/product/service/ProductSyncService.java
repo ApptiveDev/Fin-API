@@ -1,10 +1,13 @@
-package apptive.fin.apicollector.product;
+package apptive.fin.apicollector.product.service;
 
 import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.normalize.ProductDraft;
 import apptive.fin.apicollector.product.entity.Product;
 import apptive.fin.apicollector.product.entity.ProductSource;
 import apptive.fin.apicollector.product.entity.Provider;
+import apptive.fin.apicollector.product.repository.ProductRepository;
+import apptive.fin.apicollector.product.repository.ProductSourceRepository;
+import apptive.fin.apicollector.product.repository.ProviderRepository;
 import apptive.fin.apicollector.raw.ProductRaw;
 import apptive.fin.apicollector.raw.ProductRawRepository;
 import lombok.RequiredArgsConstructor;
