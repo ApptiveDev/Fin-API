@@ -1,6 +1,7 @@
 package apptive.fin.apicollector.normalize.extractor.keywords;
 
 import apptive.fin.apicollector.normalize.ProductDraft;
+import apptive.fin.apicollector.normalize.ProductPropertyDraft;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +14,7 @@ class BankKeywordRecognizer implements KeywordRecognizer {
 
 
     @Override
-    public List<KeywordValueEnum> recognize(ProductDraft productDraft) {
+    public List<KeywordValueEnum> recognize(ProductDraft productDraft, ProductPropertyDraft propertyDraft) {
         String content = productDraft.content();
         Set<KeywordValueEnum> keywords = new HashSet<>();
         addIfContains(keywords, content, KeywordValueEnum.BANK_CARD_USAGE,

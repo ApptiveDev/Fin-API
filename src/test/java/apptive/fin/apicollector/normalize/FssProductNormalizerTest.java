@@ -44,11 +44,13 @@ class FssProductNormalizerTest {
         assertThat(draft.type()).isEqualTo(ProductType.BANK);
         assertThat(draft.productCode()).isEqualTo("FSS:SAVING:001:ABC");
         assertThat(draft.productName()).isEqualTo("청년 적금");
-        assertThat(draft.baseRate()).isEqualByComparingTo("3.5");
-        assertThat(draft.maxRate()).isEqualByComparingTo("4.5");
-        assertThat(draft.maxMonthlyLimit()).isEqualTo(300_000L);
-        assertThat(draft.minTenureMonths()).isEqualTo(24);
-        assertThat(draft.options()).hasSize(2);
+        assertThat(draft.properties()).hasSize(2);
+        assertThat(draft.properties().get(1).providerCode()).isEqualTo("001");
+        assertThat(draft.properties().get(1).providerName()).isEqualTo("테스트은행");
+        assertThat(draft.properties().get(1).baseRate()).isEqualByComparingTo("3.5");
+        assertThat(draft.properties().get(1).maxRate()).isEqualByComparingTo("4.5");
+        assertThat(draft.properties().get(1).maxMonthlyLimit()).isEqualTo(300_000L);
+        assertThat(draft.properties().get(1).minTenureMonths()).isEqualTo(24);
         assertThat(draft.shouldSaveProduct()).isTrue();
     }
 
@@ -76,7 +78,7 @@ class FssProductNormalizerTest {
 
         ProductDraft draft = normalizer.normalize(raw);
 
-        assertThat(draft.keywords())
+        assertThat(draft.properties().getFirst().keywords())
                 .contains(
                         KeywordValueEnum.INTEREST_SAVINGS,
                         KeywordValueEnum.BENEFIT_MAX_INTEREST,

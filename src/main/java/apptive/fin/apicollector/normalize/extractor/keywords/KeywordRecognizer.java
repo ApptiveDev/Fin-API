@@ -1,14 +1,14 @@
 package apptive.fin.apicollector.normalize.extractor.keywords;
 
 import apptive.fin.apicollector.normalize.ProductDraft;
+import apptive.fin.apicollector.normalize.ProductPropertyDraft;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 public interface KeywordRecognizer {
-    List<KeywordValueEnum> recognize(ProductDraft productDraft);
+    List<KeywordValueEnum> recognize(ProductDraft productDraft, ProductPropertyDraft propertyDraft);
     default void addIfContains(
             Set<KeywordValueEnum> keywords,
             String value,

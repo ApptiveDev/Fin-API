@@ -55,28 +55,30 @@ public class OntongYouthProductNormalizer extends AbstractProductNormalizer impl
                 .classification(classification)
                 .saveProduct(true)
                 .sourceCode(Source.ONTONG_YOUTH.name())
-                .providerCode(required(providerCode, "providerCode", rawProduct))
-                .providerName(required(providerName, "providerName", rawProduct))
                 .type(ProductType.GOVERNMENT)
                 .productCode(firstText(raw, "plcyNo") != null ? firstText(raw, "plcyNo") : rawProduct.getExternalId())
                 .productName(required(productName, "productName", rawProduct))
                 .content(content)
-                .minAge(integer(raw, "sprtTrgtMinAge"))
-                .maxAge(integer(raw, "sprtTrgtMaxAge"))
-                .earnMaxAmt(longValue(raw, "earnMaxAmt"))
-                .maxMonthlyLimit(monthlyLimitExtractor.extract(productName, supportContent))
-                .requiresHomeless(containsAny(content, "무주택"))
-                .requiresHouseholder(containsAny(content, "세대주"))
-                .applyUrl(firstText(raw, "aplyUrlAddr", "refUrlAddr1", "refUrlAddr2"))
-                .options(java.util.List.of())
-                .keywords(keywordsFromText(
-                        text(raw, "plcyKywdNm"),
-                        text(raw, "lclsfNm"),
-                        text(raw, "mclsfNm"),
-                        text(raw, "zipCd"),
-                        productName,
-                        content
-                ))
+                .properties(java.util.List.of(ProductPropertyDraft.builder()
+                        .providerCode(required(providerCode, "providerCode", rawProduct))
+                        .providerName(required(providerName, "providerName", rawProduct))
+                        .minAge(integer(raw, "sprtTrgtMinAge"))
+                        .maxAge(integer(raw, "sprtTrgtMaxAge"))
+                        .earnMaxAmt(longValue(raw, "earnMaxAmt"))
+                        .maxMonthlyLimit(monthlyLimitExtractor.extract(productName, supportContent))
+                        .requiresHomeless(containsAny(content, "무주택"))
+                        .requiresHouseholder(containsAny(content, "세대주"))
+                        .applyUrl(firstText(raw, "aplyUrlAddr", "refUrlAddr1", "refUrlAddr2"))
+                        .keywords(keywordsFromText(
+                                text(raw, "plcyKywdNm"),
+                                text(raw, "lclsfNm"),
+                                text(raw, "mclsfNm"),
+                                text(raw, "zipCd"),
+                                providerName,
+                                productName,
+                                content
+                        ))
+                        .build()))
                 .build();
     }
 

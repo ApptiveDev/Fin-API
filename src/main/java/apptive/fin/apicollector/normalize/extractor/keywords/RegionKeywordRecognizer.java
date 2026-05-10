@@ -1,23 +1,23 @@
 package apptive.fin.apicollector.normalize.extractor.keywords;
 
 import apptive.fin.apicollector.normalize.ProductDraft;
+import apptive.fin.apicollector.normalize.ProductPropertyDraft;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Component
 public class RegionKeywordRecognizer implements KeywordRecognizer {
 
     @Override
-    public List<KeywordValueEnum> recognize(ProductDraft productDraft) {
+    public List<KeywordValueEnum> recognize(ProductDraft productDraft, ProductPropertyDraft propertyDraft) {
 
-        String providerName = productDraft.providerName();
+        String providerName = propertyDraft.providerName();
         Set<KeywordValueEnum> keywords = new HashSet<>();
-        if (!providerName.contains("은행")) {
+        if (providerName != null && !providerName.contains("은행")) {
             addIfContains(keywords, providerName, KeywordValueEnum.REGION_SEOUL, "서울");
             addIfContains(keywords, providerName, KeywordValueEnum.REGION_BUSAN, "부산");
             addIfContains(keywords, providerName, KeywordValueEnum.REGION_DAEGU, "대구");

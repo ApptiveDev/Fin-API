@@ -15,9 +15,6 @@ class ProductDraftTest {
 
         assertThat(draft.classification()).isEqualTo(ProductClassification.FINANCIAL_PRODUCT);
         assertThat(draft.shouldSaveProduct()).isTrue();
-        assertThat(draft.options()).isEmpty();
-        assertThat(draft.keywords()).isEmpty();
-        assertThat(draft.requiresHomeless()).isFalse();
-        assertThat(draft.requiresHouseholder()).isFalse();
+        assertThat(draft.properties()).isEmpty();
     }
 }

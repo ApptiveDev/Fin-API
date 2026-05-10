@@ -1,17 +1,16 @@
 package apptive.fin.apicollector.normalize.extractor.keywords;
 
 import apptive.fin.apicollector.normalize.ProductDraft;
+import apptive.fin.apicollector.normalize.ProductPropertyDraft;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Component
 class TermKeywordRecognizer implements KeywordRecognizer {
     @Override
-    public List<KeywordValueEnum> recognize(ProductDraft productDraft) {
+    public List<KeywordValueEnum> recognize(ProductDraft productDraft, ProductPropertyDraft propertyDraft) {
         // TODO : ProductDraft 구조 바꾼 뒤 개발...
 //        String content = productDraft.content();
 //        Set<KeywordValueEnum> keywords = new HashSet<>();
@@ -26,5 +25,6 @@ class TermKeywordRecognizer implements KeywordRecognizer {
 //        );
 //
 //        return keywords.stream().toList();
+        return List.of();
     }
 }

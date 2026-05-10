@@ -48,12 +48,13 @@ class OntongYouthProductNormalizerTest {
         assertThat(draft.sourceCode()).isEqualTo("ONTONG_YOUTH");
         assertThat(draft.type()).isEqualTo(ProductType.GOVERNMENT);
         assertThat(draft.productCode()).isEqualTo("P001");
-        assertThat(draft.providerCode()).isEqualTo("ORG001");
-        assertThat(draft.maxMonthlyLimit()).isEqualTo(100_000L);
-        assertThat(draft.minAge()).isEqualTo(19);
-        assertThat(draft.maxAge()).isEqualTo(34);
-        assertThat(draft.earnMaxAmt()).isNull();
-        assertThat(draft.options()).isEmpty();
+        assertThat(draft.properties()).hasSize(1);
+        ProductPropertyDraft property = draft.properties().getFirst();
+        assertThat(property.providerCode()).isEqualTo("ORG001");
+        assertThat(property.maxMonthlyLimit()).isEqualTo(100_000L);
+        assertThat(property.minAge()).isEqualTo(19);
+        assertThat(property.maxAge()).isEqualTo(34);
+        assertThat(property.earnMaxAmt()).isNull();
     }
 
     @Test
@@ -96,7 +97,7 @@ class OntongYouthProductNormalizerTest {
 
         ProductDraft draft = normalizer.normalize(raw);
 
-        assertThat(draft.keywords())
+        assertThat(draft.properties().getFirst().keywords())
                 .contains(
                         KeywordValueEnum.REGION_SEOUL,
                         KeywordValueEnum.BENEFIT_GOV_SUBSIDY,
