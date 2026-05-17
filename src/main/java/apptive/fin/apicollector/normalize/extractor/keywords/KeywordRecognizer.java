@@ -6,6 +6,8 @@ import apptive.fin.apicollector.product.KeywordValueEnum;
 
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public interface KeywordRecognizer {
     List<KeywordValueEnum> recognize(ProductDraft productDraft, ProductPropertyDraft propertyDraft);
@@ -20,10 +22,23 @@ public interface KeywordRecognizer {
         }
 
         for (String token : tokens) {
-            if (value.contains(token) || value.matches(token)) {
+            if (matchesToken(value, token)) {
                 keywords.add(keyword);
                 return;
             }
         }
     }
+    default boolean matchesToken(String value, String token) {
+        if (value.contains(token)) {
+            return true;
+        }
+
+        try {
+            return Pattern.compile(token).matcher(value).find();
+        }
+        catch (PatternSyntaxException e) {
+            return false;
+        }
+    }
+
 }

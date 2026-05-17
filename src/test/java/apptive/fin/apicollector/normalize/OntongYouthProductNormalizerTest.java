@@ -3,12 +3,21 @@ package apptive.fin.apicollector.normalize;
 import apptive.fin.apicollector.Mode;
 import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.config.CollectorProperties;
+import apptive.fin.apicollector.normalize.extractor.KeywordExtractor;
 import apptive.fin.apicollector.normalize.extractor.MonthlyLimitExtractor;
+import apptive.fin.apicollector.normalize.extractor.keywords.BankKeywordRecognizer;
+import apptive.fin.apicollector.normalize.extractor.keywords.BenefitKeywordRecognizer;
+import apptive.fin.apicollector.normalize.extractor.keywords.InterestKeywordRecognizer;
+import apptive.fin.apicollector.normalize.extractor.keywords.RegionKeywordRecognizer;
+import apptive.fin.apicollector.normalize.extractor.keywords.StatusKeywordRecognizer;
+import apptive.fin.apicollector.normalize.extractor.keywords.TermKeywordRecognizer;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import apptive.fin.apicollector.product.ProductType;
 import apptive.fin.apicollector.raw.ProductRaw;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,7 +27,8 @@ class OntongYouthProductNormalizerTest {
             new ObjectMapper(),
             properties(),
             new OntongYouthPolicyClassifier(),
-            new MonthlyLimitExtractor()
+            new MonthlyLimitExtractor(),
+            keywordExtractor()
     );
 
     @Test
@@ -45,7 +55,7 @@ class OntongYouthProductNormalizerTest {
 
         assertThat(draft.classification()).isEqualTo(ProductClassification.FINANCIAL_PRODUCT);
         assertThat(draft.shouldSaveProduct()).isTrue();
-        assertThat(draft.sourceCode()).isEqualTo("ONTONG_YOUTH");
+        assertThat(draft.sourceCode()).isEqualTo("ONTONG");
         assertThat(draft.type()).isEqualTo(ProductType.GOVERNMENT);
         assertThat(draft.productCode()).isEqualTo("P001");
         assertThat(draft.properties()).hasSize(1);
@@ -74,7 +84,7 @@ class OntongYouthProductNormalizerTest {
 
         assertThat(draft.classification()).isEqualTo(ProductClassification.LOAN_EXCLUDED);
         assertThat(draft.shouldSaveProduct()).isFalse();
-        assertThat(draft.sourceCode()).isEqualTo("ONTONG_YOUTH");
+        assertThat(draft.sourceCode()).isEqualTo("ONTONG");
     }
 
     @Test
@@ -117,5 +127,16 @@ class OntongYouthProductNormalizerTest {
                 new CollectorProperties.OntongYouth("http://localhost", "key", 100),
                 new CollectorProperties.Fss("http://localhost", "key", 100)
         );
+    }
+
+    private KeywordExtractor keywordExtractor() {
+        return new KeywordExtractor(List.of(
+                new BenefitKeywordRecognizer(),
+                new BankKeywordRecognizer(),
+                new InterestKeywordRecognizer(),
+                new RegionKeywordRecognizer(),
+                new StatusKeywordRecognizer(),
+                new TermKeywordRecognizer()
+        ));
     }
 }

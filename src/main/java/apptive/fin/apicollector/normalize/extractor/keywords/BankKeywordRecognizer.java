@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.Set;
 
 @Component
-class BankKeywordRecognizer implements KeywordRecognizer {
+public class BankKeywordRecognizer implements KeywordRecognizer {
 
 
     @Override
     public List<KeywordValueEnum> recognize(ProductDraft productDraft, ProductPropertyDraft propertyDraft) {
-        String content = productDraft.content();
+        String content = productDraft.productName() + " " + productDraft.content();
         Set<KeywordValueEnum> keywords = new HashSet<>();
         addIfContains(keywords, content, KeywordValueEnum.BANK_CARD_USAGE,
                 "(신용|체크).*카드", "카드결제", "카드사용", "카드.*결제"

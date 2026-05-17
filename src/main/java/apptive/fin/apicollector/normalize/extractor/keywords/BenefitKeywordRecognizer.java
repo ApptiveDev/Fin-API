@@ -22,7 +22,7 @@ public class BenefitKeywordRecognizer implements KeywordRecognizer {
                 "내집마련", "주택"
         );
         addIfContains(keywords, content, KeywordValueEnum.BENEFIT_GOV_SUBSIDY,
-                "기여금", "지원금"
+                "기여금", "지원금", "장려금"
         );
 
 

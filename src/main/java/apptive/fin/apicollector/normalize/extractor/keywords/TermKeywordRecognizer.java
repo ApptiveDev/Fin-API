@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 @Component
-class TermKeywordRecognizer implements KeywordRecognizer {
+public class TermKeywordRecognizer implements KeywordRecognizer {
     @Override
     public List<KeywordValueEnum> recognize(ProductDraft productDraft, ProductPropertyDraft propertyDraft) {
         Integer term = propertyDraft.saveTerm();
@@ -22,7 +22,7 @@ class TermKeywordRecognizer implements KeywordRecognizer {
         if (term < 24) {
             keywords.add(KeywordValueEnum.TERM_AROUND_1_YEAR);
         }
-        if (term < 37) {
+        else if (term < 37) {
             keywords.add(KeywordValueEnum.TERM_2_TO_3_YEARS);
         }
         else {
