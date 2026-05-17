@@ -5,29 +5,26 @@ import apptive.fin.apicollector.normalize.ProductPropertyDraft;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Component
-class TermKeywordRecognizer implements KeywordRecognizer {
+public class BenefitKeywordRecognizer implements KeywordRecognizer {
     @Override
     public List<KeywordValueEnum> recognize(ProductDraft productDraft, ProductPropertyDraft propertyDraft) {
-        Integer term = propertyDraft.saveTerm();
-        if (term == null)
-            return List.of();
-
         Set<KeywordValueEnum> keywords = new HashSet<>();
-        if (term < 24) {
-            keywords.add(KeywordValueEnum.TERM_AROUND_1_YEAR);
-        }
-        if (term < 37) {
-            keywords.add(KeywordValueEnum.TERM_2_TO_3_YEARS);
-        }
-        else {
-            keywords.add(KeywordValueEnum.TERM_OVER_5_YEARS);
-        }
+        String content =  productDraft.content();
+        addIfContains(keywords, content, KeywordValueEnum.BENEFIT_TAX_FREE,
+                "비과세"
+        );
+        addIfContains(keywords, content, KeywordValueEnum.BENEFIT_HOUSE_PREPARE,
+                "내집마련", "주택"
+        );
+        addIfContains(keywords, content, KeywordValueEnum.BENEFIT_GOV_SUBSIDY,
+                "기여금", "지원금"
+        );
+
 
         return keywords.stream().toList();
     }

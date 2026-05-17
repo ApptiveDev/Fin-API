@@ -1,6 +1,9 @@
 package apptive.fin.apicollector.normalize;
 
+import apptive.fin.apicollector.normalize.extractor.KeywordExtractor;
 import apptive.fin.apicollector.product.KeywordValueEnum;
+import apptive.fin.apicollector.product.entity.Product;
+import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
@@ -10,6 +13,27 @@ import java.util.List;
 import java.util.Set;
 
 abstract class AbstractProductNormalizer {
+
+    protected ProductDraft extractKeywords(
+            KeywordExtractor extractor,
+            ProductDraft draft
+
+    ) {
+        List<ProductPropertyDraft> productPropertyDrafts = new ArrayList<>();
+        for (ProductPropertyDraft property : draft.properties()) {
+            List<KeywordValueEnum> keywords = extractor.extract(draft, property);
+
+            productPropertyDrafts.add(
+                    property
+                            .toBuilder()
+                            .keywords(keywords)
+                            .build()
+            );
+        }
+        return draft.toBuilder()
+                .properties(productPropertyDrafts)
+                .build();
+    }
 
     protected String text(JsonNode node, String fieldName) {
         JsonNode value = node.path(fieldName);
@@ -94,9 +118,6 @@ abstract class AbstractProductNormalizer {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    protected List<KeywordValueEnum> extractKeywords(ProductDraft productDraft) {
-        return List.of();
-    }
 
     protected List<KeywordValueEnum> keywordsFromText(String... values) {
         Set<KeywordValueEnum> keywords = EnumSet.noneOf(KeywordValueEnum.class);

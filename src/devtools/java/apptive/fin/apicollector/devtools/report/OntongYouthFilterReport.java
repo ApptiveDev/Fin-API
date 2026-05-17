@@ -116,9 +116,9 @@ public class OntongYouthFilterReport {
 
         List<ProductRaw> products = new ArrayList<>();
         for (JsonNode row : rows) {
-            if (Source.ONTONG_YOUTH.name().equals(row.path("source").asString())) {
+            if (Source.ONTONG.name().equals(row.path("source").asString())) {
                 products.add(new ProductRaw(
-                        Source.ONTONG_YOUTH,
+                        Source.ONTONG,
                         row.path("external_id").asString(),
                         row.path("content_hash").asString(),
                         row.path("raw_json").asString()

@@ -5,29 +5,18 @@ import apptive.fin.apicollector.normalize.ProductPropertyDraft;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Component
-class TermKeywordRecognizer implements KeywordRecognizer {
+public class InterestKeywordRecognizer implements KeywordRecognizer {
     @Override
     public List<KeywordValueEnum> recognize(ProductDraft productDraft, ProductPropertyDraft propertyDraft) {
-        Integer term = propertyDraft.saveTerm();
-        if (term == null)
-            return List.of();
-
-        Set<KeywordValueEnum> keywords = new HashSet<>();
-        if (term < 24) {
-            keywords.add(KeywordValueEnum.TERM_AROUND_1_YEAR);
-        }
-        if (term < 37) {
-            keywords.add(KeywordValueEnum.TERM_2_TO_3_YEARS);
-        }
-        else {
-            keywords.add(KeywordValueEnum.TERM_OVER_5_YEARS);
-        }
+        Set<KeywordValueEnum> keywords = new HashSet<KeywordValueEnum>();
+        String title = productDraft.productName();
+        addIfContains(keywords, title, KeywordValueEnum.INTEREST_SAVINGS, "적금", "예금", "저축");
+        addIfContains(keywords, title, KeywordValueEnum.INTEREST_LOAN, "대출");
 
         return keywords.stream().toList();
     }

@@ -40,8 +40,8 @@ public class DeactivateMissingProductTasklet implements Tasklet {
 
         Instant threshold = Instant.now().minus(properties.unseenDisablePeriod(), ChronoUnit.DAYS);
 
-        if (properties.source() == Source.ALL || properties.source() == Source.ONTONG_YOUTH) {
-            int ontongDeactivated = productSyncService.disableAllUnseenProducts(Source.ONTONG_YOUTH, threshold);
+        if (properties.source() == Source.ALL || properties.source() == Source.ONTONG) {
+            int ontongDeactivated = productSyncService.disableAllUnseenProducts(Source.ONTONG, threshold);
             log.info(
                     "DeactivateMissingProductTasklet: ontong={}",
                     ontongDeactivated

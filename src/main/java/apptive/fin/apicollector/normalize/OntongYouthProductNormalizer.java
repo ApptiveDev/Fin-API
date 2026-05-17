@@ -2,13 +2,19 @@ package apptive.fin.apicollector.normalize;
 
 import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.config.CollectorProperties;
+import apptive.fin.apicollector.normalize.extractor.KeywordExtractor;
 import apptive.fin.apicollector.normalize.extractor.MonthlyLimitExtractor;
+import apptive.fin.apicollector.product.KeywordValueEnum;
 import apptive.fin.apicollector.product.ProductType;
+import apptive.fin.apicollector.product.entity.ProductProperty;
 import apptive.fin.apicollector.raw.ProductRaw;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -18,10 +24,11 @@ public class OntongYouthProductNormalizer extends AbstractProductNormalizer impl
     private final CollectorProperties properties;
     private final OntongYouthPolicyClassifier classifier;
     private final MonthlyLimitExtractor monthlyLimitExtractor;
+    private final KeywordExtractor keywordExtractor;
 
     @Override
     public Source source() {
-        return Source.ONTONG_YOUTH;
+        return Source.ONTONG;
     }
 
     @Override
@@ -48,13 +55,13 @@ public class OntongYouthProductNormalizer extends AbstractProductNormalizer impl
                 "etcMttrCn"
         );
 
-        return ProductDraft.builder()
+        var draft = ProductDraft.builder()
                 .rawId(rawProduct.getId())
                 .rawSource(rawProduct.getSource())
                 .normalizerVersion(properties.normalizerVersion())
                 .classification(classification)
                 .saveProduct(true)
-                .sourceCode(Source.ONTONG_YOUTH.name())
+                .sourceCode(Source.ONTONG.name())
                 .type(ProductType.GOVERNMENT)
                 .productCode(firstText(raw, "plcyNo") != null ? firstText(raw, "plcyNo") : rawProduct.getExternalId())
                 .productName(required(productName, "productName", rawProduct))
@@ -69,17 +76,19 @@ public class OntongYouthProductNormalizer extends AbstractProductNormalizer impl
                         .requiresHomeless(containsAny(content, "무주택"))
                         .requiresHouseholder(containsAny(content, "세대주"))
                         .applyUrl(firstText(raw, "aplyUrlAddr", "refUrlAddr1", "refUrlAddr2"))
-                        .keywords(keywordsFromText(
-                                text(raw, "plcyKywdNm"),
-                                text(raw, "lclsfNm"),
-                                text(raw, "mclsfNm"),
-                                text(raw, "zipCd"),
-                                providerName,
-                                productName,
-                                content
-                        ))
+//                        .keywords(keywordsFromText(
+//                                text(raw, "plcyKywdNm"),
+//                                text(raw, "lclsfNm"),
+//                                text(raw, "mclsfNm"),
+//                                text(raw, "zipCd"),
+//                                providerName,
+//                                productName,
+//                                content
+//                        ))
                         .build()))
                 .build();
+
+        return extractKeywords(keywordExtractor, draft);
     }
 
     private ProductDraft skippedDraft(ProductRaw rawProduct, ProductClassification classification) {
@@ -89,7 +98,7 @@ public class OntongYouthProductNormalizer extends AbstractProductNormalizer impl
                 .normalizerVersion(properties.normalizerVersion())
                 .classification(classification)
                 .saveProduct(false)
-                .sourceCode(Source.ONTONG_YOUTH.name())
+                .sourceCode(Source.ONTONG.name())
                 .build();
     }
 

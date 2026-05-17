@@ -2,6 +2,7 @@ package apptive.fin.apicollector.normalize;
 
 import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.config.CollectorProperties;
+import apptive.fin.apicollector.normalize.extractor.KeywordExtractor;
 import apptive.fin.apicollector.product.ProductType;
 import apptive.fin.apicollector.raw.ProductRaw;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class FssProductNormalizer extends AbstractProductNormalizer implements P
 
     private final ObjectMapper objectMapper;
     private final CollectorProperties properties;
+    private final KeywordExtractor keywordExtractor;
 
     @Override
     public Source source() {
@@ -32,19 +34,21 @@ public class FssProductNormalizer extends AbstractProductNormalizer implements P
         String productName = firstText(base, "fin_prdt_nm");
         List<ProductPropertyDraft> propertyDrafts = properties(raw, base, productName, content);
 
-        return ProductDraft.builder()
-                .rawId(rawProduct.getId())
-                .rawSource(rawProduct.getSource())
-                .normalizerVersion(properties.normalizerVersion())
-                .classification(ProductClassification.FINANCIAL_PRODUCT)
-                .saveProduct(true)
-                .sourceCode(Source.FSS.name())
-                .type(ProductType.BANK)
-                .productCode(rawProduct.getExternalId())
-                .productName(required(productName, rawProduct))
-                .content(content)
-                .properties(propertyDrafts)
-                .build();
+        var draft = ProductDraft.builder()
+                    .rawId(rawProduct.getId())
+                    .rawSource(rawProduct.getSource())
+                    .normalizerVersion(properties.normalizerVersion())
+                    .classification(ProductClassification.FINANCIAL_PRODUCT)
+                    .saveProduct(true)
+                    .sourceCode(Source.FSS.name())
+                    .type(ProductType.BANK)
+                    .productCode(rawProduct.getExternalId())
+                    .productName(required(productName, rawProduct))
+                    .content(content)
+                    .properties(propertyDrafts)
+                    .build();
+
+        return extractKeywords(keywordExtractor, draft);
     }
 
     private JsonNode read(ProductRaw rawProduct) {

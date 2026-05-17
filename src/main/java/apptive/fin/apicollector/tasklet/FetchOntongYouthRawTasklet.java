@@ -46,7 +46,7 @@ public class FetchOntongYouthRawTasklet implements Tasklet {
             }
 
             SaveResult result = rawProductSaveService.saveOrUpdate(
-                    Source.ONTONG_YOUTH,
+                    Source.ONTONG,
                     externalId,
                     item
             );

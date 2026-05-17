@@ -23,7 +23,7 @@ class OntongYouthProductNormalizerTest {
 
     @Test
     void normalizesOnlyFinancialPolicy() {
-        ProductRaw raw = new ProductRaw(Source.ONTONG_YOUTH, "P001", "hash", """
+        ProductRaw raw = new ProductRaw(Source.ONTONG, "P001", "hash", """
                 {
                   "plcyNo": "P001",
                   "plcyNm": "청년 저축 지원",
@@ -59,7 +59,7 @@ class OntongYouthProductNormalizerTest {
 
     @Test
     void returnsSkippedDraftForLoanPolicy() {
-        ProductRaw raw = new ProductRaw(Source.ONTONG_YOUTH, "P002", "hash", """
+        ProductRaw raw = new ProductRaw(Source.ONTONG, "P002", "hash", """
                 {
                   "plcyNo": "P002",
                   "plcyNm": "청년 대출 지원",
@@ -79,7 +79,7 @@ class OntongYouthProductNormalizerTest {
 
     @Test
     void extractsKeywordsFromOntongPolicyJson() {
-        ProductRaw raw = new ProductRaw(Source.ONTONG_YOUTH, "P003", "hash", """
+        ProductRaw raw = new ProductRaw(Source.ONTONG, "P003", "hash", """
                 {
                   "plcyNo": "P003",
                   "plcyNm": "서울 청년 저축 장려금",
