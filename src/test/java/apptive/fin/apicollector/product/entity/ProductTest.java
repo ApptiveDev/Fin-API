@@ -15,7 +15,7 @@ class ProductTest {
     void replaceKeywordsReusesExistingKeywordsAndAddsOnlyMissingOnes() {
         ProductSource source = ProductSource.create("ONTONG_YOUTH", "ONTONG_YOUTH");
         Provider provider = Provider.create(source, "ORG001", "테스트기관");
-        Product product = Product.create(source, ProductType.GOVERNMENT, "P001", "청년 저축 지원");
+        Product product = Product.create(source, ProductType.POLICY, "P001", "청년 저축 지원");
         product.replaceProperties(List.of(ProductPropertyDraft.builder()
                 .providerCode("ORG001")
                 .providerName("테스트기관")

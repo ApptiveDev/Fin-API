@@ -56,7 +56,7 @@ class OntongYouthProductNormalizerTest {
         assertThat(draft.classification()).isEqualTo(ProductClassification.FINANCIAL_PRODUCT);
         assertThat(draft.shouldSaveProduct()).isTrue();
         assertThat(draft.sourceCode()).isEqualTo("ONTONG");
-        assertThat(draft.type()).isEqualTo(ProductType.GOVERNMENT);
+        assertThat(draft.type()).isEqualTo(ProductType.POLICY);
         assertThat(draft.productCode()).isEqualTo("P001");
         assertThat(draft.properties()).hasSize(1);
         ProductPropertyDraft property = draft.properties().getFirst();

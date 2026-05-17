@@ -41,7 +41,7 @@ public class FssProductNormalizer extends AbstractProductNormalizer implements P
                     .classification(ProductClassification.FINANCIAL_PRODUCT)
                     .saveProduct(true)
                     .sourceCode(Source.FSS.name())
-                    .type(ProductType.BANK)
+                    .type(rawProduct.getType())
                     .productCode(rawProduct.getExternalId())
                     .productName(required(productName, rawProduct))
                     .content(content)

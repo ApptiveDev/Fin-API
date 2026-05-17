@@ -4,17 +4,12 @@ import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.config.CollectorProperties;
 import apptive.fin.apicollector.normalize.extractor.KeywordExtractor;
 import apptive.fin.apicollector.normalize.extractor.MonthlyLimitExtractor;
-import apptive.fin.apicollector.product.KeywordValueEnum;
 import apptive.fin.apicollector.product.ProductType;
-import apptive.fin.apicollector.product.entity.ProductProperty;
 import apptive.fin.apicollector.raw.ProductRaw;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -62,7 +57,7 @@ public class OntongYouthProductNormalizer extends AbstractProductNormalizer impl
                 .classification(classification)
                 .saveProduct(true)
                 .sourceCode(Source.ONTONG.name())
-                .type(ProductType.GOVERNMENT)
+                .type(rawProduct.getType())
                 .productCode(firstText(raw, "plcyNo") != null ? firstText(raw, "plcyNo") : rawProduct.getExternalId())
                 .productName(required(productName, "productName", rawProduct))
                 .content(content)
