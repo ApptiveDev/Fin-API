@@ -1,11 +1,10 @@
 package apptive.fin.apicollector.normalize.extractor.keywords;
 
-import apptive.fin.apicollector.normalize.ProductDraft;
-import apptive.fin.apicollector.normalize.ProductPropertyDraft;
+import apptive.fin.apicollector.normalize.dto.ProductDraft;
+import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

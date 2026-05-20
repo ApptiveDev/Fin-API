@@ -1,9 +1,9 @@
-package apptive.fin.apicollector.normalize;
+package apptive.fin.apicollector.normalize.normalizer;
 
+import apptive.fin.apicollector.normalize.dto.ProductDraft;
+import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
 import apptive.fin.apicollector.normalize.extractor.KeywordExtractor;
 import apptive.fin.apicollector.product.KeywordValueEnum;
-import apptive.fin.apicollector.product.entity.Product;
-import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
@@ -12,7 +12,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-abstract class AbstractProductNormalizer {
+public abstract class AbstractProductNormalizer {
 
     protected ProductDraft extractKeywords(
             KeywordExtractor extractor,

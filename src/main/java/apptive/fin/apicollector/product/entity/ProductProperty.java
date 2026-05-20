@@ -1,6 +1,6 @@
 package apptive.fin.apicollector.product.entity;
 
-import apptive.fin.apicollector.normalize.ProductPropertyDraft;
+import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
 import apptive.fin.apicollector.product.InterestRateType;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import jakarta.persistence.*;

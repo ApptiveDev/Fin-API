@@ -1,5 +1,7 @@
-package apptive.fin.apicollector.normalize;
+package apptive.fin.apicollector.normalize.classifier;
 
+import apptive.fin.apicollector.normalize.ProductClassification;
+import apptive.fin.apicollector.normalize.normalizer.AbstractProductNormalizer;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import tools.jackson.databind.JsonNode;
@@ -45,7 +47,7 @@ public class OntongYouthPolicyClassifier extends AbstractProductNormalizer {
             return ProductClassification.LOAN_EXCLUDED;
         }
 
-        if (financeScore(policy) >= 6) {
+        if (financeScore(policy) >= 10) {
             return ProductClassification.FINANCIAL_PRODUCT;
         }
 

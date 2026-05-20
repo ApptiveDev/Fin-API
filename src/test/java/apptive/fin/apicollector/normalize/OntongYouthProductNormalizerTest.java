@@ -3,6 +3,9 @@ package apptive.fin.apicollector.normalize;
 import apptive.fin.apicollector.Mode;
 import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.config.CollectorProperties;
+import apptive.fin.apicollector.normalize.classifier.OntongYouthPolicyClassifier;
+import apptive.fin.apicollector.normalize.dto.ProductDraft;
+import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
 import apptive.fin.apicollector.normalize.extractor.KeywordExtractor;
 import apptive.fin.apicollector.normalize.extractor.MonthlyLimitExtractor;
 import apptive.fin.apicollector.normalize.extractor.keywords.BankKeywordRecognizer;
@@ -11,6 +14,7 @@ import apptive.fin.apicollector.normalize.extractor.keywords.InterestKeywordReco
 import apptive.fin.apicollector.normalize.extractor.keywords.RegionKeywordRecognizer;
 import apptive.fin.apicollector.normalize.extractor.keywords.StatusKeywordRecognizer;
 import apptive.fin.apicollector.normalize.extractor.keywords.TermKeywordRecognizer;
+import apptive.fin.apicollector.normalize.normalizer.OntongYouthProductNormalizer;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import apptive.fin.apicollector.product.ProductType;
 import apptive.fin.apicollector.raw.ProductRaw;

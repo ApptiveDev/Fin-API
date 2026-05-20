@@ -4,11 +4,11 @@ import apptive.fin.apicollector.Mode;
 import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.config.CollectorProperties;
 import apptive.fin.apicollector.devtools.support.DevtoolPaths;
-import apptive.fin.apicollector.normalize.OntongYouthPolicyClassifier;
-import apptive.fin.apicollector.normalize.OntongYouthProductNormalizer;
+import apptive.fin.apicollector.normalize.classifier.OntongYouthPolicyClassifier;
+import apptive.fin.apicollector.normalize.normalizer.OntongYouthProductNormalizer;
 import apptive.fin.apicollector.normalize.ProductClassification;
-import apptive.fin.apicollector.normalize.ProductDraft;
-import apptive.fin.apicollector.normalize.ProductPropertyDraft;
+import apptive.fin.apicollector.normalize.dto.ProductDraft;
+import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
 import apptive.fin.apicollector.normalize.extractor.KeywordExtractor;
 import apptive.fin.apicollector.normalize.extractor.MonthlyLimitExtractor;
 import apptive.fin.apicollector.normalize.extractor.keywords.BankKeywordRecognizer;
@@ -18,6 +18,7 @@ import apptive.fin.apicollector.normalize.extractor.keywords.RegionKeywordRecogn
 import apptive.fin.apicollector.normalize.extractor.keywords.StatusKeywordRecognizer;
 import apptive.fin.apicollector.normalize.extractor.keywords.TermKeywordRecognizer;
 import apptive.fin.apicollector.product.KeywordValueEnum;
+import apptive.fin.apicollector.product.ProductType;
 import apptive.fin.apicollector.raw.ProductRaw;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -235,7 +236,8 @@ public class KeywordExtractorReport {
                     Source.ONTONG,
                     row.path("external_id").asString(),
                     row.path("content_hash").asString(),
-                    rawJson
+                    rawJson,
+                    ProductType.POLICY
             );
             products.add(new LoadedRawProduct(row.path("id").asString(), productRaw, raw));
         }

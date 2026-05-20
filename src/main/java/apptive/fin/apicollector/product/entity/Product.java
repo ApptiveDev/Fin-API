@@ -1,8 +1,8 @@
 package apptive.fin.apicollector.product.entity;
 
 import apptive.fin.apicollector.global.entity.BaseTimeEntity;
-import apptive.fin.apicollector.normalize.ProductDraft;
-import apptive.fin.apicollector.normalize.ProductPropertyDraft;
+import apptive.fin.apicollector.normalize.dto.ProductDraft;
+import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
 import apptive.fin.apicollector.product.ProductType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

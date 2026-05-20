@@ -1,6 +1,7 @@
-package apptive.fin.apicollector.normalize;
+package apptive.fin.apicollector.normalize.dto;
 
 import apptive.fin.apicollector.Source;
+import apptive.fin.apicollector.normalize.ProductClassification;
 import apptive.fin.apicollector.product.ProductType;
 import lombok.Builder;
 

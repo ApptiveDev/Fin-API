@@ -1,8 +1,8 @@
 package apptive.fin.apicollector.product.service;
 
 import apptive.fin.apicollector.Source;
-import apptive.fin.apicollector.normalize.ProductDraft;
-import apptive.fin.apicollector.normalize.ProductPropertyDraft;
+import apptive.fin.apicollector.normalize.dto.ProductDraft;
+import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
 import apptive.fin.apicollector.product.entity.Product;
 import apptive.fin.apicollector.product.entity.ProductSource;
 import apptive.fin.apicollector.product.entity.Provider;

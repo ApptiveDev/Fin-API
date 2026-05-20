@@ -1,7 +1,7 @@
 package apptive.fin.apicollector.normalize.extractor;
 
-import apptive.fin.apicollector.normalize.ProductDraft;
-import apptive.fin.apicollector.normalize.ProductPropertyDraft;
+import apptive.fin.apicollector.normalize.dto.ProductDraft;
+import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
 import apptive.fin.apicollector.normalize.extractor.keywords.KeywordRecognizer;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import lombok.RequiredArgsConstructor;

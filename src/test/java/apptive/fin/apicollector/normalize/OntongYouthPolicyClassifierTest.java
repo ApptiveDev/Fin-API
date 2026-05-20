@@ -1,5 +1,6 @@
 package apptive.fin.apicollector.normalize;
 
+import apptive.fin.apicollector.normalize.classifier.OntongYouthPolicyClassifier;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;

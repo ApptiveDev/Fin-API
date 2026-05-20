@@ -1,6 +1,6 @@
 package apptive.fin.apicollector.batch;
 
-import apptive.fin.apicollector.normalize.ProductDraft;
+import apptive.fin.apicollector.normalize.dto.ProductDraft;
 import apptive.fin.apicollector.product.service.ProductSyncService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.infrastructure.item.Chunk;

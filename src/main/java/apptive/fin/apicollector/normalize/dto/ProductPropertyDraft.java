@@ -1,4 +1,4 @@
-package apptive.fin.apicollector.normalize;
+package apptive.fin.apicollector.normalize.dto;
 
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import lombok.Builder;
