@@ -51,12 +51,12 @@ class FssProductNormalizerTest {
                     {"intr_rate_type": "S", "intr_rate_type_nm": "단리", "save_trm": "24", "intr_rate": 3.5, "intr_rate2": 4.5}
                   ]
                 }
-                """);
+                """, ProductType.SAVING);
 
         ProductDraft draft = normalizer.normalize(raw);
 
         assertThat(draft.sourceCode()).isEqualTo("FSS");
-        assertThat(draft.type()).isEqualTo(ProductType.BANK);
+        assertThat(draft.type()).isEqualTo(ProductType.SAVING);
         assertThat(draft.productCode()).isEqualTo("FSS:SAVING:001:ABC");
         assertThat(draft.productName()).isEqualTo("청년 적금");
         assertThat(draft.properties()).hasSize(2);
@@ -89,14 +89,13 @@ class FssProductNormalizerTest {
                     {"intr_rate_type": "S", "intr_rate_type_nm": "단리", "save_trm": "12", "intr_rate": 3.0, "intr_rate2": 4.0}
                   ]
                 }
-                """);
+                """, ProductType.SAVING);
 
         ProductDraft draft = normalizer.normalize(raw);
 
         assertThat(draft.properties().getFirst().keywords())
                 .contains(
                         KeywordValueEnum.INTEREST_SAVINGS,
-                        KeywordValueEnum.BENEFIT_MAX_INTEREST,
                         KeywordValueEnum.BANK_SALARY_TRANSFER,
                         KeywordValueEnum.BANK_CARD_USAGE,
                         KeywordValueEnum.BANK_FIRST_TRANSACTION

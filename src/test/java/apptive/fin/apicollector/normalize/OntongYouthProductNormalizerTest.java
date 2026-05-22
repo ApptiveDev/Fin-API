@@ -53,7 +53,7 @@ class OntongYouthProductNormalizerTest {
                   "earnMaxAmt": "0",
                   "aplyUrlAddr": "https://example.com"
                 }
-                """);
+                """, ProductType.POLICY);
 
         ProductDraft draft = normalizer.normalize(raw);
 
@@ -82,7 +82,7 @@ class OntongYouthProductNormalizerTest {
                   "plcyPvsnMthdCd": "0042006",
                   "plcySprtCn": "금리 지원"
                 }
-                """);
+                """, ProductType.POLICY);
 
         ProductDraft draft = normalizer.normalize(raw);
 
@@ -107,7 +107,7 @@ class OntongYouthProductNormalizerTest {
                   "sprvsnInstCd": "SEOUL",
                   "sprvsnInstCdNm": "서울시"
                 }
-                """);
+                """, ProductType.POLICY);
 
         ProductDraft draft = normalizer.normalize(raw);
 

@@ -79,3 +79,10 @@ CREATE TABLE IF NOT EXISTS product_property_keyword (
                                  product_property_id BIGINT NOT NULL REFERENCES product_properties(id) ON DELETE CASCADE,
                                  keyword_code VARCHAR(50) NOT NULL
 );
+
+-- SELECT setval(pg_get_serial_sequence('product_raw', 'id'), COALESCE((SELECT MAX(id) FROM product_raw), 1), (SELECT MAX(id) FROM product_raw) IS NOT NULL);
+-- SELECT setval(pg_get_serial_sequence('product_source', 'id'), COALESCE((SELECT MAX(id) FROM product_source), 1), (SELECT MAX(id) FROM product_source) IS NOT NULL);
+-- SELECT setval(pg_get_serial_sequence('provider', 'id'), COALESCE((SELECT MAX(id) FROM provider), 1), (SELECT MAX(id) FROM provider) IS NOT NULL);
+-- SELECT setval(pg_get_serial_sequence('product', 'id'), COALESCE((SELECT MAX(id) FROM product), 1), (SELECT MAX(id) FROM product) IS NOT NULL);
+-- SELECT setval(pg_get_serial_sequence('product_properties', 'id'), COALESCE((SELECT MAX(id) FROM product_properties), 1), (SELECT MAX(id) FROM product_properties) IS NOT NULL);
+-- SELECT setval(pg_get_serial_sequence('product_property_keyword', 'id'), COALESCE((SELECT MAX(id) FROM product_property_keyword), 1), (SELECT MAX(id) FROM product_property_keyword) IS NOT NULL);
