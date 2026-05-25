@@ -2,7 +2,9 @@ package apptive.fin.apicollector.bank;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -10,22 +12,35 @@ public abstract class AbstractStaticBankProductScraper implements BankProductScr
     private final StaticHtmlClient htmlClient;
     private final ProductPageVerifier verifier;
     private final ProductInfoExtractor extractor;
+    private final BankProductSeedCatalog seedCatalog;
+    private final List<ProductLinkDiscoverer> discoverers;
 
     protected AbstractStaticBankProductScraper(
             StaticHtmlClient htmlClient,
             ProductPageVerifier verifier,
-            ProductInfoExtractor extractor
+            ProductInfoExtractor extractor,
+            BankProductSeedCatalog seedCatalog,
+            List<ProductLinkDiscoverer> discoverers
     ) {
         this.htmlClient = htmlClient;
         this.verifier = verifier;
         this.extractor = extractor;
+        this.seedCatalog = seedCatalog;
+        this.discoverers = discoverers;
     }
 
     @Override
     public List<ProductCandidate> search(ProductScrapeContext context) {
         String compactKeyword = context.keyword().compact();
-        return seedCandidates(context.keyword().value()).stream()
+        List<ProductCandidate> discoveredCandidates = discoverCandidates(context.keyword());
+        List<ProductCandidate> matchedSeedCandidates = seedCandidates().stream()
                 .filter(candidate -> matches(candidate, compactKeyword))
+                .toList();
+
+        List<ProductCandidate> candidates = new java.util.ArrayList<>(discoveredCandidates);
+        candidates.addAll(matchedSeedCandidates);
+
+        return deduplicateByUrl(candidates).stream()
                 .map(this::verify)
                 .filter(candidate -> candidate.score() >= 40)
                 .toList();
@@ -42,7 +57,24 @@ public abstract class AbstractStaticBankProductScraper implements BankProductScr
         return extractor.extract(candidate, htmlClient.fetch(candidate.url()));
     }
 
-    protected abstract List<ProductCandidate> seedCandidates(String keyword);
+    protected List<ProductCandidate> seedCandidates() {
+        return seedCatalog.candidates(bankCode());
+    }
+
+    private List<ProductCandidate> discoverCandidates(ProductSearchKeyword keyword) {
+        return discoverers.stream()
+                .filter(discoverer -> discoverer.bankCode() == bankCode())
+                .flatMap(discoverer -> discoverer.discover(keyword).stream())
+                .toList();
+    }
+
+    private List<ProductCandidate> deduplicateByUrl(List<ProductCandidate> candidates) {
+        Map<String, ProductCandidate> deduplicated = new LinkedHashMap<>();
+        for (ProductCandidate candidate : candidates) {
+            deduplicated.putIfAbsent(candidate.url(), candidate);
+        }
+        return deduplicated.values().stream().toList();
+    }
 
     private ProductCandidate verify(ProductCandidate candidate) {
         VerificationResult result = verifier.verify(candidate, htmlClient.fetch(candidate.url()));
@@ -67,7 +99,4 @@ public abstract class AbstractStaticBankProductScraper implements BankProductScr
                 || compactKeyword.contains(keyword);
     }
 
-    protected ProductCandidate seed(String keyword, String title, String url) {
-        return new ProductCandidate(bankCode(), keyword, title, url, CandidateSource.MANUAL_SEED, 0);
-    }
 }

@@ -11,9 +11,11 @@ public class IbkBankProductScraper extends AbstractStaticBankProductScraper {
     public IbkBankProductScraper(
             StaticHtmlClient htmlClient,
             ProductPageVerifier verifier,
-            ProductInfoExtractor extractor
+            ProductInfoExtractor extractor,
+            BankProductSeedCatalog seedCatalog,
+            List<ProductLinkDiscoverer> discoverers
     ) {
-        super(htmlClient, verifier, extractor);
+        super(htmlClient, verifier, extractor, seedCatalog, discoverers);
     }
 
     @Override
@@ -21,8 +23,4 @@ public class IbkBankProductScraper extends AbstractStaticBankProductScraper {
         return BankCode.IBK;
     }
 
-    @Override
-    protected List<ProductCandidate> seedCandidates(String keyword) {
-        return List.of();
-    }
 }

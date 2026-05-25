@@ -42,3 +42,18 @@ collector:
     api-key: ${FSS_API_KEY:}
     page-size : 100
 
+  bank-product:
+    seeds:
+      - bank-code: KB
+        keyword: 청년도약계좌
+        aliases:
+          - 청년 자산형성 지원(청년도약계좌)
+        title: 청년도약계좌
+        url: https://obank.kbstar.com/quics?cc=b061496%3Ab061645&page=C016613&prcode=DP01001576
+        enabled: true
+      - bank-code: WOORI
+        keyword: 청년도약계좌
+        title: 우리 청년도약계좌
+        url: https://spot.wooribank.com/pot/Dream?PRD_CD=P010002512&PRD_YN=Y&cc=c007095%3Ac009166%3Bc012263%3Ac012399&withyou=PODEP0019
+        enabled: false
+

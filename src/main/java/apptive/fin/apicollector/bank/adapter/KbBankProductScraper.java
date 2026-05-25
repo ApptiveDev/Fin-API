@@ -11,9 +11,11 @@ public class KbBankProductScraper extends AbstractStaticBankProductScraper {
     public KbBankProductScraper(
             StaticHtmlClient htmlClient,
             ProductPageVerifier verifier,
-            ProductInfoExtractor extractor
+            ProductInfoExtractor extractor,
+            BankProductSeedCatalog seedCatalog,
+            List<ProductLinkDiscoverer> discoverers
     ) {
-        super(htmlClient, verifier, extractor);
+        super(htmlClient, verifier, extractor, seedCatalog, discoverers);
     }
 
     @Override
@@ -21,12 +23,4 @@ public class KbBankProductScraper extends AbstractStaticBankProductScraper {
         return BankCode.KB;
     }
 
-    @Override
-    protected List<ProductCandidate> seedCandidates(String keyword) {
-        return List.of(seed(
-                "청년도약계좌",
-                "청년도약계좌",
-                "https://obank.kbstar.com/quics?cc=b061496%3Ab061645&page=C016613&prcode=DP01001576"
-        ));
-    }
 }

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Map;
 
 @Component
 public class StaticHtmlClient {
@@ -27,6 +28,28 @@ public class StaticHtmlClient {
         }
         catch (Exception e) {
             throw new IllegalStateException("Failed to fetch static HTML. url=" + url, e);
+        }
+    }
+
+    public FetchedPage post(String url, Map<String, String> data) {
+        try {
+            Document document = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 api-collector/1.0")
+                    .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                    .timeout(10_000)
+                    .data(data)
+                    .post();
+            String html = document.html();
+            return new FetchedPage(
+                    url,
+                    document.title(),
+                    document.text().replaceAll("\\s+", " ").trim(),
+                    html,
+                    sha256(html)
+            );
+        }
+        catch (Exception e) {
+            throw new IllegalStateException("Failed to post static HTML. url=" + url, e);
         }
     }
 
