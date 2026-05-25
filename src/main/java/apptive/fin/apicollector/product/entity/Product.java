@@ -3,6 +3,7 @@ package apptive.fin.apicollector.product.entity;
 import apptive.fin.apicollector.global.entity.BaseTimeEntity;
 import apptive.fin.apicollector.normalize.dto.ProductDraft;
 import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
+import apptive.fin.apicollector.product.ProductPropertyOrigin;
 import apptive.fin.apicollector.product.ProductType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -84,10 +85,21 @@ public class Product extends BaseTimeEntity {
             List<ProductPropertyDraft> propertyDrafts,
             Function<ProductPropertyDraft, Provider> providerResolver
     ) {
-        this.properties.clear();
-        propertyDrafts.forEach(propertyDraft ->
-                this.properties.add(ProductProperty.create(this, providerResolver.apply(propertyDraft), propertyDraft))
-        );
+        replaceProperties(ProductPropertyOrigin.NORMALIZED, propertyDrafts, providerResolver);
+    }
+
+    public void replaceProperties(
+            ProductPropertyOrigin origin,
+            List<ProductPropertyDraft> propertyDrafts,
+            Function<ProductPropertyDraft, Provider> providerResolver
+    ) {
+        this.properties.removeIf(property -> property.getPropertyOrigin() == origin);
+        propertyDrafts.forEach(propertyDraft -> {
+            ProductPropertyDraft scopedDraft = propertyDraft.toBuilder()
+                    .propertyOrigin(origin)
+                    .build();
+            this.properties.add(ProductProperty.create(this, providerResolver.apply(scopedDraft), scopedDraft));
+        });
     }
 
     public void markUnjoinable() {

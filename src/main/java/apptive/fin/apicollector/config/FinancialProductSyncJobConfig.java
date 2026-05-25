@@ -87,13 +87,15 @@ public class FinancialProductSyncJobConfig {
             Step fetchOntongYouthRawStep,
             Step normalizeOntongRawProductStep,
             Step deactivateMissingProductStep,
-            Step addHighInterestStep
+            Step addHighInterestStep,
+            Step bankProductScrapeStep
     ) {
         return new FlowBuilder<Flow>("ontongYouthSyncFlow")
                 .start(fetchOntongYouthRawStep)
                 .next(normalizeOntongRawProductStep)
                 .next(deactivateMissingProductStep)
                 .next(addHighInterestStep)
+                .next(bankProductScrapeStep)
                 .build();
     }
 
@@ -104,7 +106,8 @@ public class FinancialProductSyncJobConfig {
             Step normalizeOntongRawProductStep,
             Step normalizeFssRawProductStep,
             Step deactivateMissingProductStep,
-            Step addHighInterestStep
+            Step addHighInterestStep,
+            Step bankProductScrapeStep
     ) {
         return new FlowBuilder<Flow>("allSyncFlow")
                 .start(fetchOntongYouthRawStep)
@@ -113,6 +116,7 @@ public class FinancialProductSyncJobConfig {
                 .next(normalizeFssRawProductStep)
                 .next(deactivateMissingProductStep)
                 .next(addHighInterestStep)
+                .next(bankProductScrapeStep)
                 .build();
     }
 

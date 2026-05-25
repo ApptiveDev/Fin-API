@@ -22,11 +22,13 @@ spring:
       initialize-schema: always
 
 
+
+
 collector:
   enabled: true
   source: ALL
   mode: normalize_only
-  normalizer-version: 11
+  normalizer-version: 12
   reader-page-size : 500
   unseen-disable-period : 1
 

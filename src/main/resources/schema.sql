@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS product_properties (
                                     id BIGSERIAL PRIMARY KEY,
                                     product_id BIGINT NOT NULL REFERENCES product(id) ON DELETE CASCADE,
                                     provider_id BIGINT NOT NULL REFERENCES provider(id),
+                                    property_origin VARCHAR(30) NOT NULL DEFAULT 'NORMALIZED',
                                     base_rate DECIMAL(5,2),
                                     max_rate DECIMAL(5,2),
                                     gov_contribution_rate DECIMAL(5,2),
@@ -70,9 +71,38 @@ CREATE TABLE IF NOT EXISTS product_properties (
                                     requires_householder BOOLEAN NOT NULL DEFAULT FALSE,
                                     is_joinable BOOLEAN NOT NULL DEFAULT TRUE,
                                     apply_url VARCHAR(500),
+                                    join_target TEXT,
+                                    join_period_text TEXT,
+                                    join_amount_text TEXT,
+                                    join_method TEXT,
+                                    base_rate_text TEXT,
+                                    max_rate_text TEXT,
+                                    preferential_condition TEXT,
+                                    depositor_protection_text TEXT,
+                                    source_hash VARCHAR(64),
+                                    scraped_at TIMESTAMPTZ,
                                     intr_rate_type VARCHAR(30),
                                     save_trm INT
 );
+
+ALTER TABLE product_properties
+    ADD COLUMN IF NOT EXISTS property_origin VARCHAR(30) NOT NULL DEFAULT 'NORMALIZED';
+
+ALTER TABLE product_properties
+    ADD COLUMN IF NOT EXISTS join_target TEXT,
+    ADD COLUMN IF NOT EXISTS join_period_text TEXT,
+    ADD COLUMN IF NOT EXISTS join_amount_text TEXT,
+    ADD COLUMN IF NOT EXISTS join_method TEXT,
+    ADD COLUMN IF NOT EXISTS base_rate_text TEXT,
+    ADD COLUMN IF NOT EXISTS max_rate_text TEXT,
+    ADD COLUMN IF NOT EXISTS preferential_condition TEXT,
+    ADD COLUMN IF NOT EXISTS depositor_protection_text TEXT,
+    ADD COLUMN IF NOT EXISTS source_hash VARCHAR(64),
+    ADD COLUMN IF NOT EXISTS scraped_at TIMESTAMPTZ;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_product_properties_bank_scrape
+    ON product_properties (product_id, provider_id)
+    WHERE property_origin = 'BANK_SCRAPE';
 
 CREATE TABLE IF NOT EXISTS product_property_keyword (
                                  id BIGSERIAL PRIMARY KEY,

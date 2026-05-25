@@ -1,6 +1,9 @@
 package apptive.fin.apicollector.product.repository;
 
+import apptive.fin.apicollector.product.ProductPropertyOrigin;
+import apptive.fin.apicollector.product.entity.Product;
 import apptive.fin.apicollector.product.entity.ProductProperty;
+import apptive.fin.apicollector.product.entity.Provider;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -8,8 +11,15 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductPropertyRepository extends JpaRepository<ProductProperty, Long> {
+
+    Optional<ProductProperty> findByProductAndProviderAndPropertyOrigin(
+            Product product,
+            Provider provider,
+            ProductPropertyOrigin propertyOrigin
+    );
 
     @Query("""
             select pp.maxRate
