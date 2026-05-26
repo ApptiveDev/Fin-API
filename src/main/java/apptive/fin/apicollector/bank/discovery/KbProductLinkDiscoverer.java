@@ -1,6 +1,12 @@
 package apptive.fin.apicollector.bank.discovery;
 
-import apptive.fin.apicollector.bank.*;
+import apptive.fin.apicollector.bank.ProductLinkDiscoverer;
+import apptive.fin.apicollector.bank.client.StaticHtmlClient;
+import apptive.fin.apicollector.bank.keyword.ProductNameSimilarity;
+import apptive.fin.apicollector.bank.model.BankCode;
+import apptive.fin.apicollector.bank.model.CandidateSource;
+import apptive.fin.apicollector.bank.model.ProductCandidate;
+import apptive.fin.apicollector.bank.model.ProductSearchKeyword;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -74,24 +80,19 @@ public class KbProductLinkDiscoverer implements ProductLinkDiscoverer {
             String productCode = matcher.group(1);
             String isNew = matcher.group(2);
             String title = link.text();
-            if (!matches(keyword.value(), title)) {
+            if (!matches(keyword.canonicalName(), title)) {
                 continue;
             }
+            int score = ProductNameSimilarity.score(keyword.canonicalName(), title);
             String url = "https://obank.kbstar.com/quics?cc=b061496%3Ab061645&page=C016613"
                     + "&isNew=" + isNew
                     + "&prcode=" + productCode;
-            candidates.add(new ProductCandidate(bankCode(), keyword.value(), title, url, CandidateSource.BANK_SEARCH, 0));
+            candidates.add(new ProductCandidate(bankCode(), keyword.canonicalName(), title, url, CandidateSource.BANK_SEARCH, score));
         }
         return candidates;
     }
 
     private boolean matches(String keyword, String title) {
-        String compactKeyword = compact(keyword);
-        String compactTitle = compact(title);
-        return compactTitle.contains(compactKeyword) || compactKeyword.contains(compactTitle);
-    }
-
-    private String compact(String value) {
-        return value == null ? "" : value.replaceAll("\\s+", "");
+        return ProductNameSimilarity.isSimilar(keyword, title);
     }
 }

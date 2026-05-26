@@ -3,7 +3,6 @@ package apptive.fin.apicollector.product.entity;
 import apptive.fin.apicollector.global.entity.BaseTimeEntity;
 import apptive.fin.apicollector.normalize.dto.ProductDraft;
 import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
-import apptive.fin.apicollector.product.ProductPropertyOrigin;
 import apptive.fin.apicollector.product.ProductType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -18,15 +17,7 @@ import java.util.function.Function;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(
-        name = "product",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_product_source_product_code",
-                        columnNames = {"source_id", "product_code"}
-                )
-        }
-)
+@Table(name = "product")
 public class Product extends BaseTimeEntity {
 
 
@@ -85,21 +76,10 @@ public class Product extends BaseTimeEntity {
             List<ProductPropertyDraft> propertyDrafts,
             Function<ProductPropertyDraft, Provider> providerResolver
     ) {
-        replaceProperties(ProductPropertyOrigin.NORMALIZED, propertyDrafts, providerResolver);
-    }
-
-    public void replaceProperties(
-            ProductPropertyOrigin origin,
-            List<ProductPropertyDraft> propertyDrafts,
-            Function<ProductPropertyDraft, Provider> providerResolver
-    ) {
-        this.properties.removeIf(property -> property.getPropertyOrigin() == origin);
-        propertyDrafts.forEach(propertyDraft -> {
-            ProductPropertyDraft scopedDraft = propertyDraft.toBuilder()
-                    .propertyOrigin(origin)
-                    .build();
-            this.properties.add(ProductProperty.create(this, providerResolver.apply(scopedDraft), scopedDraft));
-        });
+        this.properties.clear();
+        propertyDrafts.forEach(propertyDraft ->
+                this.properties.add(ProductProperty.create(this, providerResolver.apply(propertyDraft), propertyDraft))
+        );
     }
 
     public void markUnjoinable() {

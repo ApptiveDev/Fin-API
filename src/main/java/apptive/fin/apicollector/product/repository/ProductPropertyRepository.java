@@ -1,6 +1,5 @@
 package apptive.fin.apicollector.product.repository;
 
-import apptive.fin.apicollector.product.ProductPropertyOrigin;
 import apptive.fin.apicollector.product.entity.Product;
 import apptive.fin.apicollector.product.entity.ProductProperty;
 import apptive.fin.apicollector.product.entity.Provider;
@@ -15,11 +14,7 @@ import java.util.Optional;
 
 public interface ProductPropertyRepository extends JpaRepository<ProductProperty, Long> {
 
-    Optional<ProductProperty> findByProductAndProviderAndPropertyOrigin(
-            Product product,
-            Provider provider,
-            ProductPropertyOrigin propertyOrigin
-    );
+    Optional<ProductProperty> findFirstByProductAndProvider(Product product, Provider provider);
 
     @Query("""
             select pp.maxRate

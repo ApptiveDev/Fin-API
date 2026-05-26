@@ -3,7 +3,6 @@ package apptive.fin.apicollector.product.entity;
 import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
 import apptive.fin.apicollector.product.InterestRateType;
 import apptive.fin.apicollector.product.KeywordValueEnum;
-import apptive.fin.apicollector.product.ProductPropertyOrigin;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -11,7 +10,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -35,10 +33,6 @@ public class ProductProperty {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "provider_id", nullable = false)
     private Provider provider;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ProductPropertyOrigin propertyOrigin = ProductPropertyOrigin.NORMALIZED;
 
     @BatchSize(size = 100)
     @OneToMany(mappedBy = "productProperty", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -73,35 +67,6 @@ public class ProductProperty {
 
     private String applyUrl;
 
-    @Column(columnDefinition = "TEXT")
-    private String joinTarget;
-
-    @Column(columnDefinition = "TEXT")
-    private String joinPeriodText;
-
-    @Column(columnDefinition = "TEXT")
-    private String joinAmountText;
-
-    @Column(columnDefinition = "TEXT")
-    private String joinMethod;
-
-    @Column(columnDefinition = "TEXT")
-    private String baseRateText;
-
-    @Column(columnDefinition = "TEXT")
-    private String maxRateText;
-
-    @Column(columnDefinition = "TEXT")
-    private String preferentialCondition;
-
-    @Column(columnDefinition = "TEXT")
-    private String depositorProtectionText;
-
-    @Column(length = 64)
-    private String sourceHash;
-
-    private Instant scrapedAt;
-
     @Enumerated(EnumType.STRING)
     private InterestRateType intrRateType;
 
@@ -118,7 +83,6 @@ public class ProductProperty {
     }
 
     public void updateFrom(ProductPropertyDraft propertyDraft) {
-        this.propertyOrigin = propertyDraft.propertyOrigin();
         this.baseRate = propertyDraft.baseRate();
         this.maxRate = propertyDraft.maxRate();
         this.govContributionRate = propertyDraft.govContributionRate();
@@ -133,16 +97,6 @@ public class ProductProperty {
         this.requiresHouseholder = propertyDraft.requiresHouseholder();
         this.isJoinable = true;
         this.applyUrl = propertyDraft.applyUrl();
-        this.joinTarget = propertyDraft.joinTarget();
-        this.joinPeriodText = propertyDraft.joinPeriodText();
-        this.joinAmountText = propertyDraft.joinAmountText();
-        this.joinMethod = propertyDraft.joinMethod();
-        this.baseRateText = propertyDraft.baseRateText();
-        this.maxRateText = propertyDraft.maxRateText();
-        this.preferentialCondition = propertyDraft.preferentialCondition();
-        this.depositorProtectionText = propertyDraft.depositorProtectionText();
-        this.sourceHash = propertyDraft.sourceHash();
-        this.scrapedAt = propertyDraft.scrapedAt();
         this.intrRateType = InterestRateType.fromCode(propertyDraft.intrRateType());
         this.saveTrm = propertyDraft.saveTerm();
         replaceKeywords(propertyDraft.keywords());

@@ -1,6 +1,15 @@
 package apptive.fin.apicollector.bank;
 
 import apptive.fin.apicollector.Source;
+import apptive.fin.apicollector.bank.keyword.ProductSearchKeywordExtractor;
+import apptive.fin.apicollector.bank.model.BankCode;
+import apptive.fin.apicollector.bank.model.BankProductInfo;
+import apptive.fin.apicollector.bank.model.ProductCandidate;
+import apptive.fin.apicollector.bank.model.ProductScrapeContext;
+import apptive.fin.apicollector.bank.model.ProductSearchKeyword;
+import apptive.fin.apicollector.bank.scraper.BankProductScraper;
+import apptive.fin.apicollector.bank.scraper.BankProductScraperFactory;
+import apptive.fin.apicollector.bank.sync.BankProductPropertySyncService;
 import apptive.fin.apicollector.product.ProductType;
 import apptive.fin.apicollector.product.entity.Product;
 import apptive.fin.apicollector.product.repository.ProductRepository;
@@ -16,7 +25,7 @@ import java.util.List;
 public class BankProductScrapeService {
     private final ProductRepository productRepository;
     private final ProductSearchKeywordExtractor keywordExtractor;
-    private final List<BankProductScraper> scrapers;
+    private final BankProductScraperFactory scraperFactory;
     private final BankProductPropertySyncService syncService;
 
     public ScrapeSummary scrapeOntongProducts() {
@@ -40,7 +49,8 @@ public class BankProductScrapeService {
 
             for (ProductSearchKeyword keyword : keywords) {
                 ProductScrapeContext context = new ProductScrapeContext(product, keyword);
-                for (BankProductScraper scraper : scrapers) {
+                for (BankCode bankCode : BankCode.values()) {
+                    BankProductScraper scraper = scraperFactory.create(bankCode);
                     try {
                         List<ProductCandidate> candidates = scraper.search(context);
                         candidateCount += candidates.size();
