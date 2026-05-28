@@ -22,18 +22,18 @@ public class HighInterestKeywordService {
     @Transactional
     public HighInterestKeywordUpdateResult refreshHighInterestKeywords() {
         List<BigDecimal> rates = productPropertyRepository.findJoinableMaxRatesOrderByMaxRate();
-        BigDecimal median = calculateMedian(rates);
+        BigDecimal criteria = calculatePercentile(rates, 0.3);
         String keywordCode = HIGH_INTEREST_KEYWORD.name();
 
-        if (median == null) {
+        if (criteria == null) {
             int removed = productPropertyRepository.deleteHighInterestKeywords(keywordCode);
-            return new HighInterestKeywordUpdateResult(median, rates.size(), 0, removed);
+            return new HighInterestKeywordUpdateResult(criteria, rates.size(), 0, removed);
         }
 
-        int removed = productPropertyRepository.deleteHighInterestKeywordsNotExceedingMedian(keywordCode, median);
-        int added = productPropertyRepository.insertMissingHighInterestKeywords(keywordCode, median);
+        int removed = productPropertyRepository.deleteHighInterestKeywordsNotExceedingMedian(keywordCode, criteria);
+        int added = productPropertyRepository.insertMissingHighInterestKeywords(keywordCode, criteria);
 
-        return new HighInterestKeywordUpdateResult(median, rates.size(), added, removed);
+        return new HighInterestKeywordUpdateResult(criteria, rates.size(), added, removed);
     }
 
     private @Nullable BigDecimal calculateMedian(List<BigDecimal> sortedRates) {
@@ -50,6 +50,16 @@ public class HighInterestKeywordService {
         return sortedRates.get(middle - 1)
                 .add(sortedRates.get(middle))
                 .divide(BigDecimal.valueOf(2), 4, RoundingMode.HALF_UP);
+    }
+
+    private @Nullable BigDecimal calculatePercentile(List<BigDecimal> sortedRates, double percentile) {
+        if (sortedRates.isEmpty()) {
+            return null;
+        }
+
+        int size = sortedRates.size();
+        int pos = (int) Math.ceil(size * percentile);
+        return sortedRates.get(pos - 1);
     }
 
     public record HighInterestKeywordUpdateResult(

@@ -28,7 +28,7 @@ collector:
   enabled: true
   source: ALL
   mode: normalize_only
-  normalizer-version: 13
+  normalizer-version: 14
   reader-page-size : 500
   unseen-disable-period : 1
 

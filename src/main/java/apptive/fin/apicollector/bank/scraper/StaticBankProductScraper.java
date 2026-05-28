@@ -19,6 +19,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Slf4j
 class StaticBankProductScraper implements BankProductScraper {
@@ -28,6 +31,7 @@ class StaticBankProductScraper implements BankProductScraper {
     private final ProductInfoExtractor extractor;
     private final BankProductSeedCatalog seedCatalog;
     private final List<ProductLinkDiscoverer> discoverers;
+    private final ConcurrentMap<String, CompletableFuture<StaticHtmlClient.FetchedPage>> pageCache = new ConcurrentHashMap<>();
 
     StaticBankProductScraper(
             BankCode bankCode,
@@ -55,8 +59,12 @@ class StaticBankProductScraper implements BankProductScraper {
         List<ProductCandidate> candidates = new ArrayList<>(discoverCandidates(context.keyword()));
         candidates.addAll(matchedSeedCandidates(context.keyword()));
 
-        return deduplicateByUrl(candidates).stream()
-                .map(this::verify)
+        List<CompletableFuture<ProductCandidate>> futures = deduplicateByUrl(candidates).stream()
+                .map(this::verifyAsync)
+                .toList();
+
+        return futures.stream()
+                .map(CompletableFuture::join)
                 .filter(candidate -> candidate.score() >= 40)
                 .toList();
     }
@@ -69,7 +77,7 @@ class StaticBankProductScraper implements BankProductScraper {
 
     @Override
     public BankProductInfo extractInfo(ProductCandidate candidate) {
-        return extractor.extract(candidate, htmlClient.fetch(candidate.url()));
+        return extractor.extract(candidate, fetchPage(candidate.url()).join());
     }
 
     private List<ProductCandidate> discoverCandidates(ProductSearchKeyword keyword) {
@@ -93,8 +101,12 @@ class StaticBankProductScraper implements BankProductScraper {
         return deduplicated.values().stream().toList();
     }
 
-    private ProductCandidate verify(ProductCandidate candidate) {
-        VerificationResult result = verifier.verify(candidate, htmlClient.fetch(candidate.url()));
+    private CompletableFuture<ProductCandidate> verifyAsync(ProductCandidate candidate) {
+        return fetchPage(candidate.url()).thenApply(page -> verify(candidate, page));
+    }
+
+    private ProductCandidate verify(ProductCandidate candidate, StaticHtmlClient.FetchedPage page) {
+        VerificationResult result = verifier.verify(candidate, page);
         log.info(
                 "Bank product candidate verified. bank={}, keyword={}, title={}, score={}, status={}, url={}",
                 candidate.bankCode(),
@@ -105,6 +117,10 @@ class StaticBankProductScraper implements BankProductScraper {
                 candidate.url()
         );
         return candidate.withScore(result.score());
+    }
+
+    private CompletableFuture<StaticHtmlClient.FetchedPage> fetchPage(String url) {
+        return pageCache.computeIfAbsent(url, htmlClient::fetchAsync);
     }
 
     private boolean matches(ProductCandidate candidate, ProductSearchKeyword keyword) {

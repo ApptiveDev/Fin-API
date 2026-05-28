@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 abstract class SearchBackedProductLinkDiscoverer extends AbstractKnownProductLinkDiscoverer {
@@ -24,15 +25,24 @@ abstract class SearchBackedProductLinkDiscoverer extends AbstractKnownProductLin
     @Override
     public List<ProductCandidate> discover(ProductSearchKeyword keyword) {
         Map<String, ProductCandidate> candidates = new LinkedHashMap<>();
-        for (SearchRequest request : searchRequests(keyword)) {
-            try {
-                StaticHtmlClient.FetchedPage page = request.fetch(htmlClient);
-                for (ProductCandidate candidate : extract(keyword, page)) {
-                    candidates.putIfAbsent(candidate.url(), candidate);
-                }
-            }
-            catch (Exception e) {
-                log.warn("Bank product search failed. bank={}, keyword={}, url={}", bankCode(), keyword.value(), request.url(), e);
+        List<CompletableFuture<List<ProductCandidate>>> futures = searchRequests(keyword).stream()
+                .map(request -> request.fetchAsync(htmlClient)
+                        .thenApply(page -> extract(keyword, page))
+                        .exceptionally(e -> {
+                            log.warn(
+                                    "Bank product search failed. bank={}, keyword={}, url={}",
+                                    bankCode(),
+                                    keyword.value(),
+                                    request.url(),
+                                    e
+                            );
+                            return List.of();
+                        }))
+                .toList();
+
+        for (CompletableFuture<List<ProductCandidate>> future : futures) {
+            for (ProductCandidate candidate : future.join()) {
+                candidates.putIfAbsent(candidate.url(), candidate);
             }
         }
         for (ProductCandidate candidate : super.discover(keyword)) {
@@ -75,10 +85,10 @@ abstract class SearchBackedProductLinkDiscoverer extends AbstractKnownProductLin
             return new SearchRequest(Method.POST, url, data);
         }
 
-        private StaticHtmlClient.FetchedPage fetch(StaticHtmlClient htmlClient) {
+        private CompletableFuture<StaticHtmlClient.FetchedPage> fetchAsync(StaticHtmlClient htmlClient) {
             return method == Method.POST
-                    ? htmlClient.post(url, data)
-                    : htmlClient.fetch(url);
+                    ? htmlClient.postAsync(url, data)
+                    : htmlClient.fetchAsync(url);
         }
     }
 

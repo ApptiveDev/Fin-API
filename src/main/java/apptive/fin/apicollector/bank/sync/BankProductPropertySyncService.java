@@ -8,10 +8,12 @@ import apptive.fin.apicollector.product.entity.Provider;
 import apptive.fin.apicollector.product.repository.ProductPropertyRepository;
 import apptive.fin.apicollector.product.repository.ProviderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BankProductPropertySyncService {
@@ -36,13 +38,37 @@ public class BankProductPropertySyncService {
                 .providerName(info.bankCode().displayName())
                 .baseRate(info.baseRate())
                 .maxRate(info.maxRate())
-                .applyUrl(info.productUrl())
+                .applyUrl(normalizeUrl(info.productUrl()))
                 .build();
 
         productPropertyRepository.findFirstByProductAndProvider(product, provider)
                 .ifPresentOrElse(
                         property -> property.updateFrom(draft),
-                        () -> productPropertyRepository.save(ProductProperty.create(product, provider, draft))
+                        () -> saveIfUrlNotDuplicated(product, provider, draft)
                 );
+    }
+
+    private void saveIfUrlNotDuplicated(Product product, Provider provider, ProductPropertyDraft draft) {
+        if (hasText(draft.applyUrl()) && productPropertyRepository.existsByProductAndApplyUrl(product, draft.applyUrl())) {
+            log.info(
+                    "Bank product property skipped because applyUrl already exists. productId={}, providerCode={}, applyUrl={}",
+                    product.getId(),
+                    provider.getCode(),
+                    draft.applyUrl()
+            );
+            return;
+        }
+        productPropertyRepository.save(ProductProperty.create(product, provider, draft));
+    }
+
+    private String normalizeUrl(String url) {
+        if (!hasText(url)) {
+            return url;
+        }
+        return url.trim();
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

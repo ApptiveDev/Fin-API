@@ -13,6 +13,58 @@ import static org.assertj.core.api.Assertions.assertThat;
 class BankRateExtractorTest {
 
     @Test
+    void wooriExtractorReadsSummaryDomRates() {
+        BankRateExtractor extractor = new WooriRateExtractor();
+        ProductCandidate candidate = candidate(BankCode.WOORI, "Woori soldier saving");
+        StaticHtmlClient.FetchedPage page = page(
+                candidate,
+                """
+                <input type="hidden" name="CHR_TXT" value="max 6.0% base 5.0%, 15 months">
+                <div class="product-box">
+                    <div class="product-list">
+                        <div class="prd-info"><dd class="tit"><em>max 6.0% base 5.0%</em></dd></div>
+                    </div>
+                </div>
+                """
+        );
+
+        ExtractedRates rates = extractor.extract(candidate, page);
+
+        assertThat(rates.baseRate()).isEqualByComparingTo("5.0");
+        assertThat(rates.maxRate()).isEqualByComparingTo("6.0");
+    }
+
+    @Test
+    void wooriExtractorReadsRateTabDomWhenSummaryHasOnlyMaxRate() {
+        BankRateExtractor extractor = new WooriRateExtractor(new FakeHtmlClient("""
+                <table class="tbl-type-1">
+                    <tbody>
+                        <tr><th>contract</th><td>1 month</td><td class="dtd-r">0.00</td></tr>
+                        <tr><td>1년이상~2년미만</td><td class="dtd-r">2.80</td></tr>
+                        <tr><td>2년이상~10년이내</td><td class="dtd-r">4.50</td></tr>
+                        <tr><td>10년초과</td><td class="dtd-r">3.10</td></tr>
+                    </tbody>
+                </table>
+                """));
+        ProductCandidate candidate = candidate(BankCode.WOORI, "Woori subscription");
+        StaticHtmlClient.FetchedPage page = new StaticHtmlClient.FetchedPage(
+                "https://spot.wooribank.com/pot/Dream?withyou=PODEP0019",
+                candidate.title(),
+                "",
+                """
+                <input type="hidden" name="PRD_CD" value="P010002293">
+                <input type="hidden" name="SPCHR_TXT" value="<p>max 4.5%</p>">
+                """,
+                "hash"
+        );
+
+        ExtractedRates rates = extractor.extract(candidate, page);
+
+        assertThat(rates.baseRate()).isEqualByComparingTo("3.10");
+        assertThat(rates.maxRate()).isEqualByComparingTo("4.50");
+    }
+
+    @Test
     void jbExtractorFindsDecimalRateNearInterestLabels() {
         BankRateExtractor extractor = new JbRateExtractor();
         ProductCandidate candidate = candidate(BankCode.JB, "행복키움 통장");
@@ -238,6 +290,11 @@ class BankRateExtractorTest {
         @Override
         public FetchedPage fetch(String url) {
             return new FetchedPage(url, "", body, body, "hash");
+        }
+
+        @Override
+        public FetchedPage post(String url, java.util.Map<String, String> data) {
+            return new FetchedPage(url, "", org.jsoup.Jsoup.parse(body).text(), body, "hash");
         }
     }
 }

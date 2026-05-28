@@ -16,6 +16,8 @@ public interface ProductPropertyRepository extends JpaRepository<ProductProperty
 
     Optional<ProductProperty> findFirstByProductAndProvider(Product product, Provider provider);
 
+    boolean existsByProductAndApplyUrl(Product product, String applyUrl);
+
     @Query("""
             select pp.maxRate
             from ProductProperty pp
