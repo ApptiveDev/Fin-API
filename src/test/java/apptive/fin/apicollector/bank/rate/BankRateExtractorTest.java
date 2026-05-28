@@ -291,6 +291,25 @@ class BankRateExtractorTest {
         assertThat(rates.maxRate()).isEqualByComparingTo("3.50");
     }
 
+    @Test
+    void genericExtractorIgnoresImplausibleLargeRates() {
+        BankRateExtractor extractor = new IbkRateExtractor();
+        ProductCandidate candidate = candidate(BankCode.IBK, "IBK product");
+        StaticHtmlClient.FetchedPage page = page(
+                candidate,
+                """
+                <div>기본금리 99.00%</div>
+                <div>최고금리 100.00%</div>
+                <section>금리 안내 71%</section>
+                """
+        );
+
+        ExtractedRates rates = extractor.extract(candidate, page);
+
+        assertThat(rates.baseRate()).isNull();
+        assertThat(rates.maxRate()).isNull();
+    }
+
     private ProductCandidate candidate(BankCode bankCode, String title) {
         return new ProductCandidate(
                 bankCode,
