@@ -21,4 +21,12 @@ class ProductNameSimilarityTest {
         assertThat(ProductNameSimilarity.isSimilar("부산청년 기쁨두배통장", "KB청년도약계좌"))
                 .isFalse();
     }
+
+    @Test
+    void rejectsDifferentSavingsAccountProductsSharingGenericWords() {
+        assertThat(ProductNameSimilarity.isSimilar("내일저축계좌", "연금저축계좌"))
+                .isFalse();
+        assertThat(ProductNameSimilarity.isSimilar("청년내일저축계좌", "연금저축계좌"))
+                .isFalse();
+    }
 }

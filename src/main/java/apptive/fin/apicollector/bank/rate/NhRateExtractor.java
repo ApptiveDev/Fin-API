@@ -19,6 +19,11 @@ public class NhRateExtractor extends RateExtractionSupport implements BankRateEx
 
     @Override
     public ExtractedRates extract(ProductCandidate candidate, StaticHtmlClient.FetchedPage page) {
+        ExtractedRates smartMarketRates = ratesFromSmartMarketSummary(page.html());
+        if (smartMarketRates.hasAnyRate()) {
+            return smartMarketRates;
+        }
+
         List<BigDecimal> rates = new ArrayList<>();
         for (String text : selectTexts(page.html(), ".product_new tr")) {
             rates.addAll(ratesFromNhProductArea(text));
@@ -31,6 +36,16 @@ public class NhRateExtractor extends RateExtractionSupport implements BankRateEx
             rates.addAll(ratesFromNhProductArea(row));
         }
 
+        return minMax(rates);
+    }
+
+    private ExtractedRates ratesFromSmartMarketSummary(String html) {
+        List<BigDecimal> rates = new ArrayList<>();
+        for (String text : selectTexts(html, ".interestBanner")) {
+            if (text.contains("최저") || text.contains("최고") || text.contains("금리")) {
+                rates.addAll(ratesWithPercent(text));
+            }
+        }
         return minMax(rates);
     }
 

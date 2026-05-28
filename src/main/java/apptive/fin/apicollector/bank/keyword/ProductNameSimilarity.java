@@ -77,9 +77,13 @@ public final class ProductNameSimilarity {
     private static boolean hasConflictingDistinctiveTerms(String left, String right) {
         Set<String> leftTerms = distinctiveTerms(left);
         Set<String> rightTerms = distinctiveTerms(right);
-        return !leftTerms.isEmpty()
-                && !rightTerms.isEmpty()
-                && leftTerms.stream().noneMatch(rightTerms::contains);
+        if (leftTerms.isEmpty() && rightTerms.isEmpty()) {
+            return false;
+        }
+        if (leftTerms.isEmpty() || rightTerms.isEmpty()) {
+            return true;
+        }
+        return leftTerms.stream().noneMatch(rightTerms::contains);
     }
 
     private static Set<String> distinctiveTerms(String value) {

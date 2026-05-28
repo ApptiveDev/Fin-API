@@ -66,6 +66,29 @@ class BankRateExtractorTest {
     }
 
     @Test
+    void nhExtractorReadsSmartMarketSummaryRates() {
+        BankRateExtractor extractor = new NhRateExtractor();
+        ProductCandidate candidate = candidate(BankCode.NH, "청년 주택드림 청약통장");
+        StaticHtmlClient.FetchedPage page = page(
+                candidate,
+                """
+                <div class="interestBanner">
+                    <span>최저 연</span>
+                    <strong>3.10<em>%</em></strong>
+                    <em> ~ </em>
+                    <span>최고 연</span>
+                    <strong>4.50<em>%</em></strong>
+                </div>
+                """
+        );
+
+        ExtractedRates rates = extractor.extract(candidate, page);
+
+        assertThat(rates.baseRate()).isEqualByComparingTo("3.10");
+        assertThat(rates.maxRate()).isEqualByComparingTo("4.50");
+    }
+
+    @Test
     void productInfoExtractorUsesMatchingBankExtractor() {
         ProductInfoExtractor extractor = new ProductInfoExtractor(java.util.List.of(new KbRateExtractor()));
         ProductCandidate candidate = candidate(BankCode.KB, "청년도약계좌");
@@ -140,6 +163,48 @@ class BankRateExtractorTest {
 
         assertThat(rates.baseRate()).isEqualByComparingTo("4.00");
         assertThat(rates.maxRate()).isEqualByComparingTo("6.00");
+    }
+
+    @Test
+    void kbankExtractorReadsEmbeddedContractRateJson() {
+        BankRateExtractor extractor = new KbankRateExtractor();
+        ProductCandidate candidate = candidate(BankCode.KBANK, "코드K 자유적금");
+        StaticHtmlClient.FetchedPage page = page(
+                candidate,
+                """
+                <script>
+                var rateList = '{"listOut":[
+                  {"pdCndNm":"약정이율","bsicIntRt":"000000000000003.30","maxIntRt":"000000000000003.30"},
+                  {"pdCndNm":"약정이율","bsicIntRt":"000000000000003.50","maxIntRt":"000000000000003.50"},
+                  {"pdCndNm":"중도해지이율","bsicIntRt":"000000000000000.10","maxIntRt":"000000000000000.10"}
+                ]}';
+                </script>
+                """
+        );
+
+        ExtractedRates rates = extractor.extract(candidate, page);
+
+        assertThat(rates.baseRate()).isEqualByComparingTo("3.30");
+        assertThat(rates.maxRate()).isEqualByComparingTo("3.50");
+    }
+
+    @Test
+    void genericExtractorIgnoresInvalidLargeNumbersNearRateLabels() {
+        BankRateExtractor extractor = new KjbRateExtractor();
+        ProductCandidate candidate = candidate(BankCode.KJB, "전남청년미래적금");
+        StaticHtmlClient.FetchedPage page = page(
+                candidate,
+                """
+                <div>최고금리 상품코드 DEP20220520002</div>
+                <div>기본금리 연 3.00%</div>
+                <div>최고금리 연 3.50%</div>
+                """
+        );
+
+        ExtractedRates rates = extractor.extract(candidate, page);
+
+        assertThat(rates.baseRate()).isEqualByComparingTo("3.00");
+        assertThat(rates.maxRate()).isEqualByComparingTo("3.50");
     }
 
     private ProductCandidate candidate(BankCode bankCode, String title) {

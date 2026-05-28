@@ -91,7 +91,7 @@ abstract class RateExtractionSupport {
         return result;
     }
 
-    private boolean isValidRate(BigDecimal rate) {
+    protected boolean isValidRate(BigDecimal rate) {
         return rate.compareTo(MIN_VALID_RATE) >= 0
                 && rate.compareTo(MAX_VALID_RATE) <= 0;
     }
