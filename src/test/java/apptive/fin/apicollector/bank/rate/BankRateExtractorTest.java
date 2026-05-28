@@ -241,6 +241,38 @@ class BankRateExtractorTest {
     }
 
     @Test
+    void kjbExtractorReadsTopSummaryBeforeBodySupportRates() {
+        BankRateExtractor extractor = new KjbRateExtractor();
+        ProductCandidate candidate = candidate(BankCode.KJB, "KJB장병내일준비적금");
+        StaticHtmlClient.FetchedPage page = page(
+                candidate,
+                """
+                <div class="explain-box">
+                    <div class="item">
+                        <span class="name">최고 연</span>
+                        <div class="value max"><span class="number">5.50</span><span class="unit">%</span></div>
+                    </div>
+                    <div class="item">
+                        <span class="name">기본 연</span>
+                        <div class="value default"><span class="number">5.00</span><span class="unit">%</span></div>
+                    </div>
+                </div>
+                <section>
+                    <strong>1% 이자지원금</strong>
+                    <p>가입일부터 만기일까지 납입금액 건 별로 실제 예치일수 기간동안 연 1% 이율을 적용합니다.</p>
+                    <strong>매칭지원금</strong>
+                    <p>2023.01.01.~2023.12.31. 입금액 : 71%</p>
+                </section>
+                """
+        );
+
+        ExtractedRates rates = extractor.extract(candidate, page);
+
+        assertThat(rates.baseRate()).isEqualByComparingTo("5.00");
+        assertThat(rates.maxRate()).isEqualByComparingTo("5.50");
+    }
+
+    @Test
     void genericExtractorIgnoresInvalidLargeNumbersNearRateLabels() {
         BankRateExtractor extractor = new KjbRateExtractor();
         ProductCandidate candidate = candidate(BankCode.KJB, "전남청년미래적금");
