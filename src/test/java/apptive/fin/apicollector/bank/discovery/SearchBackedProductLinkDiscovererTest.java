@@ -51,6 +51,42 @@ class SearchBackedProductLinkDiscovererTest {
     }
 
     @Test
+    void ibkDiscovererSearchesAllVisibleListPages() {
+        IbkProductLinkDiscoverer discoverer = new IbkProductLinkDiscoverer(new StaticHtmlClient());
+
+        List<SearchBackedProductLinkDiscoverer.SearchRequest> requests = discoverer.searchRequests(
+                new ProductSearchKeyword("IBK장병내일준비적금")
+        );
+
+        assertThat(requests).hasSize(10);
+        assertThat(requests)
+                .extracting(request -> request.data().get("pageIndex"))
+                .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
+        assertThat(requests.getFirst().data())
+                .containsEntry("product_flag", "Y")
+                .containsEntry("prdcSaleYN", "Y");
+    }
+
+    @Test
+    void ibkExtractorBuildsDetailUrlFromPagedProductList() {
+        IbkProductLinkDiscoverer discoverer = new IbkProductLinkDiscoverer(new StaticHtmlClient());
+        StaticHtmlClient.FetchedPage page = page(
+                "https://mybank.ibk.co.kr/uib/jsp/guest/ntr/ntr70/ntr7010/PNTR701000_m.jsp",
+                """
+                <a href="#none" onclick="uf_showDetail('01','21','121','0112','***********','IBK장병내일준비적금');" class="stit">
+                    IBK장병내일준비적금
+                </a>
+                """
+        );
+
+        List<ProductCandidate> candidates = discoverer.extract(new ProductSearchKeyword("IBK장병내일준비적금"), page);
+
+        assertThat(candidates).hasSize(1);
+        assertThat(candidates.getFirst().url())
+                .isEqualTo("https://mybank.ibk.co.kr/uib/jsp/guest/ntr/ntr70/ntr7010/PNTR701000_i2.jsp?MENU_DIV=GNB&lncd=01&grcd=21&tmcd=121&pdcd=0112&wvcd=%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A&i_trns_biz_kncd=IBK%EC%9E%A5%EB%B3%91%EB%82%B4%EC%9D%BC%EC%A4%80%EB%B9%84%EC%A0%81%EA%B8%88");
+    }
+
+    @Test
     void jbExtractorBuildsCandidatesFromStoppedProductList() {
         JbProductLinkDiscoverer discoverer = new JbProductLinkDiscoverer(new StaticHtmlClient());
         StaticHtmlClient.FetchedPage page = page(

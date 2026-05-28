@@ -9,10 +9,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 @Component
 public class IbkProductLinkDiscoverer extends SearchBackedProductLinkDiscoverer {
@@ -35,7 +39,14 @@ public class IbkProductLinkDiscoverer extends SearchBackedProductLinkDiscoverer 
 
     @Override
     protected List<SearchRequest> searchRequests(ProductSearchKeyword keyword) {
-        return List.of(SearchRequest.get(LIST_URL));
+        return IntStream.rangeClosed(1, 10)
+                .mapToObj(pageIndex -> SearchRequest.post(LIST_URL, Map.of(
+                        "pageIndex", String.valueOf(pageIndex),
+                        "product_flag", "Y",
+                        "product_nm", "",
+                        "prdcSaleYN", "Y"
+                )))
+                .toList();
     }
 
     @Override
@@ -57,11 +68,15 @@ public class IbkProductLinkDiscoverer extends SearchBackedProductLinkDiscoverer 
                             matcher.group(3),
                             matcher.group(4),
                             matcher.group(5).replace("*", "%2A"),
-                            matcher.group(6).replace(" ", "%20")
+                            urlEncode(matcher.group(6))
                     )
             ));
         }
         return candidates;
+    }
+
+    private String urlEncode(String value) {
+        return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
     }
 
     @Override

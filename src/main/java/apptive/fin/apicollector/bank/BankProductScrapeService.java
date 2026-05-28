@@ -62,11 +62,14 @@ public class BankProductScrapeService {
 
             for (ProductSearchKeyword keyword : keywords) {
                 ProductScrapeContext context = new ProductScrapeContext(product, keyword);
-                List<BankScrapeResult> results = Arrays.stream(BankCode.values())
+                List<CompletableFuture<BankScrapeResult>> futures = Arrays.stream(BankCode.values())
                         .map(bankCode -> CompletableFuture.supplyAsync(
                                 () -> scrapeBank(context, bankCode),
                                 bankScrapeExecutor
                         ))
+                        .toList();
+
+                List<BankScrapeResult> results = futures.stream()
                         .map(CompletableFuture::join)
                         .toList();
 

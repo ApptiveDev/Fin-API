@@ -21,7 +21,7 @@ public class AddHighInterest implements Tasklet {
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
         HighInterestKeywordUpdateResult result = highInterestKeywordService.refreshHighInterestKeywords();
         log.info(
-                "AddHighInterest finished. median={}, rateCount={}, added={}, removed={}",
+                "AddHighInterest finished. criteria={}, rateCount={}, added={}, removed={}",
                 result.median(),
                 result.rateCount(),
                 result.addedCount(),
