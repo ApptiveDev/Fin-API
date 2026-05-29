@@ -87,22 +87,131 @@ class SearchBackedProductLinkDiscovererTest {
     }
 
     @Test
-    void jbExtractorBuildsCandidatesFromStoppedProductList() {
+    void ibkExtractorCanDiscoverFutureYouthSavingsProductFromPagedList() {
+        IbkProductLinkDiscoverer discoverer = new IbkProductLinkDiscoverer(new StaticHtmlClient());
+        StaticHtmlClient.FetchedPage page = page(
+                "https://mybank.ibk.co.kr/uib/jsp/guest/ntr/ntr70/ntr7010/PNTR701000_m.jsp",
+                """
+                <a href="#none" onclick="uf_showDetail('01','21','121','0999','***********','IBK청년미래적금');" class="stit">
+                    IBK청년미래적금
+                </a>
+                """
+        );
+
+        List<ProductCandidate> candidates = discoverer.extract(new ProductSearchKeyword("청년미래적금"), page);
+
+        assertThat(candidates).hasSize(1);
+        assertThat(candidates.getFirst().title()).isEqualTo("IBK청년미래적금");
+        assertThat(candidates.getFirst().url())
+                .contains("pdcd=0999")
+                .contains("i_trns_biz_kncd=IBK%EC%B2%AD%EB%85%84%EB%AF%B8%EB%9E%98%EC%A0%81%EA%B8%88");
+    }
+
+    @Test
+    void jbDiscovererSearchesCurrentSavingProductList() {
+        JbProductLinkDiscoverer discoverer = new JbProductLinkDiscoverer(new StaticHtmlClient());
+
+        List<SearchBackedProductLinkDiscoverer.SearchRequest> requests = discoverer.searchRequests(
+                new ProductSearchKeyword("JB 장병내일준비적금")
+        );
+
+        assertThat(requests).hasSize(11);
+        assertThat(requests.getFirst().url())
+                .isEqualTo("https://www.jbbank.co.kr/gdnc_szmy.act");
+        assertThat(requests)
+                .extracting(SearchBackedProductLinkDiscoverer.SearchRequest::url)
+                .contains(
+                        "https://www.jbbank.co.kr/NFF_FRDP_OPAC.act",
+                        "https://www.jbbank.co.kr/NFF_FRDP_SZMY.act",
+                        "https://www.jbbank.co.kr/NFF_FRDP_SMYR.act",
+                        "https://www.jbbank.co.kr/NFF_FRDP_HSBC.act",
+                        "https://www.jbbank.co.kr/NFF_FRDP_MRKT.act",
+                        "https://www.jbbank.co.kr/EBCIB_GDSBS_M_R001.jct"
+                );
+        assertThat(requests)
+                .filteredOn(request -> request.url().equals("https://www.jbbank.co.kr/EBCIB_GDSBS_M_R001.jct"))
+                .allSatisfy(request -> {
+                    assertThat(request.headers())
+                            .containsEntry("X-Requested-With", "XMLHttpRequest")
+                            .containsKey("Referer");
+                    assertThat(request.data().get("_JSON_"))
+                            .contains("\"GDS_NM\":\"JB 장병내일준비적금\"")
+                            .contains("\"GDS_STCD\":\"20\"");
+                });
+    }
+
+    @Test
+    void jbExtractorBuildsCandidatesFromSavingProductList() {
         JbProductLinkDiscoverer discoverer = new JbProductLinkDiscoverer(new StaticHtmlClient());
         StaticHtmlClient.FetchedPage page = page(
-                "https://www.jbbank.co.kr/gdnc_spnd.act",
+                "https://www.jbbank.co.kr/gdnc_szmy.act",
                 """
-                <dt><strong>Happy Account</strong>
-                    <a href="#jbbank" onclick="jb_location('gdnc_spnd_happy.act'); return false;">Open</a>
+                <dt><strong>JB 장병내일준비적금</strong>
+                    <a href="#jbbank" onclick="jb_location('GDNC_NTAR_PRPR.act'); return false;">Open</a>
                 </dt>
                 """
         );
 
-        List<ProductCandidate> candidates = discoverer.extract(new ProductSearchKeyword("Happy Account"), page);
+        List<ProductCandidate> candidates = discoverer.extract(new ProductSearchKeyword("JB 장병내일준비적금"), page);
 
         assertThat(candidates).hasSize(1);
         assertThat(candidates.getFirst().url())
-                .isEqualTo("https://www.jbbank.co.kr/gdnc_spnd_happy.act");
+                .isEqualTo("https://www.jbbank.co.kr/GDNC_NTAR_PRPR.act");
+    }
+
+    @Test
+    void jbExtractorCanDiscoverFutureYouthSavingsProductFromSavingList() {
+        JbProductLinkDiscoverer discoverer = new JbProductLinkDiscoverer(new StaticHtmlClient());
+        StaticHtmlClient.FetchedPage page = page(
+                "https://www.jbbank.co.kr/gdnc_szmy.act",
+                """
+                <dt><strong>JB 청년미래적금</strong>
+                    <a href="#jbbank" onclick="jb_location('GDNC_YOUTH_FUTURE.act'); return false;">Open</a>
+                </dt>
+                """
+        );
+
+        List<ProductCandidate> candidates = discoverer.extract(new ProductSearchKeyword("청년미래적금"), page);
+
+        assertThat(candidates).hasSize(1);
+        assertThat(candidates.getFirst().title()).isEqualTo("JB 청년미래적금");
+        assertThat(candidates.getFirst().url())
+                .isEqualTo("https://www.jbbank.co.kr/GDNC_YOUTH_FUTURE.act");
+    }
+
+    @Test
+    void jbExtractorBuildsCandidatesFromProductMallApiJson() {
+        JbProductLinkDiscoverer discoverer = new JbProductLinkDiscoverer(new StaticHtmlClient());
+        StaticHtmlClient.FetchedPage page = page(
+                "https://www.jbbank.co.kr/EBCIB_GDSBS_M_R001.jct",
+                """
+                {"REC":[{"GDS_NM":"JB 청년미래적금","LINK_URL":"GDNC_YOUTH_FUTURE.act","MCCD":"20"}],"COMMON_HEAD":{"ERROR":false}}
+                """
+        );
+
+        List<ProductCandidate> candidates = discoverer.extract(new ProductSearchKeyword("청년미래적금"), page);
+
+        assertThat(candidates).hasSize(1);
+        assertThat(candidates.getFirst().title()).isEqualTo("JB 청년미래적금");
+        assertThat(candidates.getFirst().url())
+                .isEqualTo("https://www.jbbank.co.kr/GDNC_YOUTH_FUTURE.act");
+    }
+
+    @Test
+    void jbExtractorFallsBackToProductMallAnchorWhenApiJsonHasNoDetailUrl() {
+        JbProductLinkDiscoverer discoverer = new JbProductLinkDiscoverer(new StaticHtmlClient());
+        StaticHtmlClient.FetchedPage page = page(
+                "https://www.jbbank.co.kr/EBCIB_GDSBS_M_R001.jct",
+                """
+                {"REC":[{"GDS_NM":"JB 청년미래적금","GDS_WHOL_CD":"10013003100990000","MCCD":"20"}],"COMMON_HEAD":{"ERROR":false}}
+                """
+        );
+
+        List<ProductCandidate> candidates = discoverer.extract(new ProductSearchKeyword("청년미래적금"), page);
+
+        assertThat(candidates).hasSize(1);
+        assertThat(candidates.getFirst().url())
+                .isEqualTo("https://www.jbbank.co.kr/NFF_FRDP_SZMY.act#product-10013003100990000");
     }
 
     @Test

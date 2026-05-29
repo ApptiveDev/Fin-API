@@ -164,6 +164,31 @@ class BankRateExtractorTest {
     }
 
     @Test
+    void kbExtractorReadsCompactSummaryRateRange() {
+        BankRateExtractor extractor = new KbRateExtractor();
+        ProductCandidate candidate = candidate(BankCode.KB, "KB청년도약계좌");
+        StaticHtmlClient.FetchedPage page = page(
+                candidate,
+                """
+                <div class="info-data3">
+                    <dl class="img3 t1">
+                        <dt>최고금리</dt>
+                        <dd>금리<span class="info-data2 t4">
+                            <span>연 </span><em class="number normal">4.50~6.00%</em>
+                        </span></dd>
+                        <dd>2026.05.29 기준, 세금공제전, 우대금리포함</dd>
+                    </dl>
+                </div>
+                """
+        );
+
+        ExtractedRates rates = extractor.extract(candidate, page);
+
+        assertThat(rates.baseRate()).isEqualByComparingTo("4.50");
+        assertThat(rates.maxRate()).isEqualByComparingTo("6.00");
+    }
+
+    @Test
     void busanExtractorReadsEncodedTemplateJson() {
         BankRateExtractor extractor = new BusanRateExtractor();
         ProductCandidate candidate = candidate(BankCode.BUSAN, "부산은행 청년도약계좌");

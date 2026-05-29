@@ -75,19 +75,25 @@ abstract class SearchBackedProductLinkDiscoverer extends AbstractKnownProductLin
     protected record SearchRequest(
             Method method,
             String url,
-            Map<String, String> data
+            Map<String, String> data,
+            Map<String, String> headers,
+            Map<String, String> cookies
     ) {
         protected static SearchRequest get(String url) {
-            return new SearchRequest(Method.GET, url, Map.of());
+            return new SearchRequest(Method.GET, url, Map.of(), Map.of(), Map.of());
         }
 
         protected static SearchRequest post(String url, Map<String, String> data) {
-            return new SearchRequest(Method.POST, url, data);
+            return new SearchRequest(Method.POST, url, data, Map.of(), Map.of());
+        }
+
+        protected static SearchRequest post(String url, Map<String, String> data, Map<String, String> headers) {
+            return new SearchRequest(Method.POST, url, data, headers, Map.of());
         }
 
         private CompletableFuture<StaticHtmlClient.FetchedPage> fetchAsync(StaticHtmlClient htmlClient) {
             return method == Method.POST
-                    ? htmlClient.postAsync(url, data)
+                    ? htmlClient.postAsync(url, data, headers, cookies)
                     : htmlClient.fetchAsync(url);
         }
     }
