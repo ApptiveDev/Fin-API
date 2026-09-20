@@ -9,6 +9,7 @@ import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
 import apptive.fin.apicollector.normalize.extractor.FssPreferentialRateExtractor;
 import apptive.fin.apicollector.normalize.extractor.FssRequiredKeywordExtractor;
 import apptive.fin.apicollector.normalize.extractor.KeywordExtractor;
+import apptive.fin.apicollector.product.ProductType;
 import apptive.fin.apicollector.raw.ProductRaw;
 
 import org.springframework.stereotype.Component;
@@ -64,7 +65,7 @@ public class FssProductNormalizer implements ProductNormalizer {
         // 은행 URL 스크래퍼가 상품을 구분하는 유일한 근거라 여기서 떼면 안 된다.
         // 괄호 제거(디스플레이 이름)는 집합 전체를 봐야 하므로 이후 DisplayNameResolver가 확정한다.
         String productName = collapseWhitespace(JsonNodes.firstText(base, "fin_prdt_nm"));
-        List<ProductPropertyDraft> propertyDrafts = properties(raw, base);
+        List<ProductPropertyDraft> propertyDrafts = properties(raw, base, rawProduct.getType());
 
         var draft = ProductDraft.builder()
                     .rawId(rawProduct.getId())
@@ -88,12 +89,17 @@ public class FssProductNormalizer implements ProductNormalizer {
 
     private List<ProductPropertyDraft> properties(
             JsonNode raw,
-            JsonNode base
+            JsonNode base,
+            ProductType type
     ) {
         String providerCode = JsonNodes.firstText(base, "fin_co_no", "kor_co_nm");
         String providerName = collapseWhitespace(bankNameNormalizer.normalize(providerCode, JsonNodes.firstText(base, "kor_co_nm", "fin_co_no")));
         String providerApplyUrl = bankUrlNormalizer.normalize(providerCode).orElse(null);
-        Long maxMonthlyLimit = JsonNodes.longValueOrNullIfZero(base, "max_limit");
+        // FSS max_limit은 예금이면 최대예치가능금액, 적금이면 월최대납입금액이므로 타입에 맞는 컬럼으로 나눠 담는다.
+        Long maxLimit = JsonNodes.longValueOrNullIfZero(base, "max_limit");
+        boolean isDeposit = type == ProductType.DEPOSIT;
+        Long maxMonthlyLimit = isDeposit ? null : maxLimit;
+        Long maxDepositAmount = isDeposit ? maxLimit : null;
         var preferentialRates = preferentialRateExtractor.extract(JsonNodes.text(base, "spcl_cnd"));
         var requiredKeywords = requiredKeywordExtractor.extract(JsonNodes.text(base, "join_member"), JsonNodes.text(base, "etc_note"));
         JsonNode optionsNode = raw.path("options");
@@ -103,6 +109,7 @@ public class FssProductNormalizer implements ProductNormalizer {
                     .providerName(providerName)
                     .providerApplyUrl(providerApplyUrl)
                     .maxMonthlyLimit(maxMonthlyLimit)
+                    .maxDepositAmount(maxDepositAmount)
                     .requiresHomeless(false)
                     .requiresHouseholder(false)
                     .requiredKeywords(requiredKeywords)
@@ -123,6 +130,7 @@ public class FssProductNormalizer implements ProductNormalizer {
                     .baseRate(JsonNodes.decimal(option, "intr_rate"))
                     .maxRate(JsonNodes.decimal(option, "intr_rate2"))
                     .maxMonthlyLimit(maxMonthlyLimit)
+                    .maxDepositAmount(maxDepositAmount)
 //                    .minTenureMonths(JsonNodes.integer(option, "save_trm"))
                     .requiresHomeless(false)
                     .requiresHouseholder(false)

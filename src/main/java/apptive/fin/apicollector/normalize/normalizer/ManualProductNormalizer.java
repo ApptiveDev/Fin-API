@@ -10,6 +10,7 @@ import apptive.fin.apicollector.normalize.dto.RequiredKeywordDraft;
 import apptive.fin.apicollector.product.ContributionType;
 import apptive.fin.apicollector.product.ExtractionConfidence;
 import apptive.fin.apicollector.product.KeywordValueEnum;
+import apptive.fin.apicollector.product.ProductType;
 import apptive.fin.apicollector.product.RequiredKeywordEffect;
 import apptive.fin.apicollector.raw.ProductRaw;
 
@@ -111,6 +112,10 @@ public class ManualProductNormalizer implements ProductNormalizer {
     }
 
     private ProductPropertyDraft toPropertyDraft(JsonNode node, ProductRaw rawProduct) {
+        // 수동 JSON은 한도를 minMonthlyLimit/maxMonthlyLimit 키로 적어도, 예금이면 예치 한도 컬럼으로 담는다.
+        Long minLimit = JsonNodes.longValueOrNullIfZero(node, "minMonthlyLimit");
+        Long maxLimit = JsonNodes.longValueOrNullIfZero(node, "maxMonthlyLimit");
+        boolean isDeposit = rawProduct.getType() == ProductType.DEPOSIT;
         return ProductPropertyDraft.builder()
                 .variantCode(JsonNodes.text(node, "variantCode"))
                 .providerCode(rawJsonReader.required(JsonNodes.text(node, "providerCode"), "providerCode", rawProduct))
@@ -124,8 +129,10 @@ public class ManualProductNormalizer implements ProductNormalizer {
                 .govMonthlyFixedContribution(JsonNodes.longValueOrNullIfZero(node, "govMonthlyFixedContribution"))
                 .govContributionPeriodMonths(JsonNodes.integer(node, "govContributionPeriodMonths"))
                 .excludeFromRateComparison(JsonNodes.bool(node, "excludeFromRateComparison"))
-                .minMonthlyLimit(JsonNodes.longValueOrNullIfZero(node, "minMonthlyLimit"))
-                .maxMonthlyLimit(JsonNodes.longValueOrNullIfZero(node, "maxMonthlyLimit"))
+                .minMonthlyLimit(isDeposit ? null : minLimit)
+                .maxMonthlyLimit(isDeposit ? null : maxLimit)
+                .minDepositAmount(isDeposit ? minLimit : null)
+                .maxDepositAmount(isDeposit ? maxLimit : null)
                 .minAge(JsonNodes.integer(node, "minAge"))
                 .maxAge(JsonNodes.integer(node, "maxAge"))
                 .allowsMilitaryAgeExtension(JsonNodes.bool(node, "allowsMilitaryAgeExtension"))
