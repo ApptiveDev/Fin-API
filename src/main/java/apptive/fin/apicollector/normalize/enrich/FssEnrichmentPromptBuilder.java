@@ -19,6 +19,10 @@ public class FssEnrichmentPromptBuilder {
                 - minMonthlyLimit, maxMonthlyLimit은 월 납입액(적금의 월 정기 납입) 전용 필드이다.
                 - productType이 SAVING(적금)일 때만, 최소/최대 월 납입액이 명시된 경우 채운다. 없거나 제한 없음이면 null로 둔다.
                 - productType이 DEPOSIT(정기예금)이면 minMonthlyLimit, maxMonthlyLimit은 항상 null로 둔다. 일시납 가입금액·가입한도는 여기에 넣지 않는다.
+                - minDepositAmount는 정기예금(DEPOSIT)의 최소 가입금액(예: "최소가입한도", "최소가입금액", "최소예치금액", "가입금액 N원 이상") 전용 필드이다.
+                - productType이 DEPOSIT일 때만, 최소 가입금액이 명시된 경우 그 금액(원 단위 정수)을 minDepositAmount에 채운다. 없거나 제한 없음이면 null로 둔다.
+                - productType이 SAVING(적금)이면 minDepositAmount는 항상 null로 둔다(적금의 최소 납입액은 minMonthlyLimit에 넣는다).
+                - 최대 가입금액·최고한도는 minDepositAmount에 넣지 않는다. 최소 금액만 넣는다.
                 - keywords에는 기간 키워드(TERM_*)를 넣지 않는다.
                 - summaryContent는 마케팅 문구 없이 가입방법, 우대조건, 가입대상, 유의사항을 짧게 정리한다.
                 - requiredKeywords에는 가입 가능 여부를 제한하는 STATUS_* 필수/제외 조건만 넣는다.
@@ -63,6 +67,7 @@ public class FssEnrichmentPromptBuilder {
                   "keywords": [],
                   "minMonthlyLimit": null,
                   "maxMonthlyLimit": null,
+                  "minDepositAmount": null,
                   "minAge": null,
                   "maxAge": null,
                   "earnMaxAmt": null,

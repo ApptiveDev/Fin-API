@@ -37,6 +37,7 @@ public class GeminiResponseParser {
                 enrichmentKeywords(enrichmentNode.path("keywords")),
                 JsonNodes.longValue(enrichmentNode, "minMonthlyLimit"),
                 JsonNodes.longValue(enrichmentNode, "maxMonthlyLimit"),
+                JsonNodes.longValue(enrichmentNode, "minDepositAmount"),
                 JsonNodes.integer(enrichmentNode, "minAge"),
                 JsonNodes.integer(enrichmentNode, "maxAge"),
                 JsonNodes.longValue(enrichmentNode, "earnMaxAmt"),

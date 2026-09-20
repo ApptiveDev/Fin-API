@@ -22,6 +22,7 @@ class GeminiResponseParserTest {
                 .set("keywords", objectMapper.createArrayNode().add("BANK_CARD_USAGE"))
                 .putNull("minMonthlyLimit")
                 .put("maxMonthlyLimit", 100000)
+                .put("minDepositAmount", 5000000)
                 .put("minAge", 19)
                 .put("maxAge", 34)
                 .putNull("earnMaxAmt")
@@ -53,6 +54,7 @@ class GeminiResponseParserTest {
         assertThat(result.summaryContent()).isEqualTo("요약");
         assertThat(result.keywords()).containsExactly("BANK_CARD_USAGE");
         assertThat(result.maxMonthlyLimit()).isEqualTo(100_000L);
+        assertThat(result.minDepositAmount()).isEqualTo(5_000_000L);
         assertThat(result.minAge()).isEqualTo(19);
         assertThat(result.requiredKeywords()).hasSize(1);
         assertThat(result.preferentialRates()).hasSize(1);

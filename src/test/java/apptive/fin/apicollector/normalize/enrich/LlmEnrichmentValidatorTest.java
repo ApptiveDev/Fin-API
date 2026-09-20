@@ -25,7 +25,7 @@ class LlmEnrichmentValidatorTest {
             List<PreferentialRateDraft> preferentialRates
     ) {
         return new LlmProductEnrichment(
-                null, List.of(), null, null, minAge, maxAge, null, null, false, false,
+                null, List.of(), null, null, null, minAge, maxAge, null, null, false, false,
                 null, null, null, null, null, false, false, null, requiredKeywords, preferentialRates);
     }
 
