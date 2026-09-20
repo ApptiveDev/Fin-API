@@ -1,0 +1,3 @@
+[submodule "fin-be"]
+	path = fin-be
+	url = https://github.com/ApptiveDev/Fin-BE.git
