@@ -1,4 +1,7 @@
 spring:
+  flyway:
+    # 마이그레이션 원본은 Fin-BE submodule(운영 전담). 이 앱은 test scope에서만 flyway로 스키마를 만든다.
+    locations: filesystem:fin-be/src/main/resources/db/migration
   sql:
     init:
       mode: never           # 컨테이너는 운영과 같은 Flyway migration으로 초기화
