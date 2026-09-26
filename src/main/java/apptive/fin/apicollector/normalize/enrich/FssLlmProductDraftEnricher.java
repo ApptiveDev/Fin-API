@@ -85,7 +85,7 @@ public class FssLlmProductDraftEnricher implements ProductDraftEnricher, StepExe
                 && cache.getResponseJson() != null
                 && requestHash.equals(cache.getRequestHash())) {
             cacheHits.incrementAndGet();
-            return fromCache(cache, rawProduct, draft);
+            return fromCache(cache, draft);
         }
         if (cache.isFailedRetryBlocked(Instant.now(), FAILED_RETRY_COOLDOWN)) {
             cooldownSkips.incrementAndGet();
@@ -114,7 +114,7 @@ public class FssLlmProductDraftEnricher implements ProductDraftEnricher, StepExe
                     rawProduct.getExternalId(),
                     Duration.between(callStart, Instant.now()).toMillis()
             );
-            return merger.merge(rawProduct, draft, enrichment);
+            return merger.merge(draft, enrichment);
         }
         catch (Exception e) {
             llmFailures.incrementAndGet();
@@ -130,11 +130,11 @@ public class FssLlmProductDraftEnricher implements ProductDraftEnricher, StepExe
         }
     }
 
-    private ProductDraft fromCache(LlmEnrichmentCache cache, ProductRaw rawProduct, ProductDraft draft) {
+    private ProductDraft fromCache(LlmEnrichmentCache cache, ProductDraft draft) {
         try {
             LlmProductEnrichment enrichment = cacheStore.readEnrichment(cache);
             validator.validate(enrichment);
-            return merger.merge(rawProduct, draft, enrichment);
+            return merger.merge(draft, enrichment);
         }
         catch (Exception e) {
             invalidCacheEntries.incrementAndGet();

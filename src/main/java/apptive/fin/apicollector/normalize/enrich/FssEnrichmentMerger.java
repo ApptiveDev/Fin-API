@@ -13,12 +13,8 @@ import apptive.fin.apicollector.product.ExtractionConfidence;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import apptive.fin.apicollector.product.ProductType;
 import apptive.fin.apicollector.product.RequiredKeywordEffect;
-import apptive.fin.apicollector.raw.ProductRaw;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -32,7 +28,6 @@ import java.util.Set;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class FssEnrichmentMerger {
 
     private static final String[] INCOME_IRRELEVANT_PHRASES = {
@@ -40,11 +35,9 @@ public class FssEnrichmentMerger {
     };
     private static final String[] INCOME_TOKENS = {"소득", "총급여", "연봉"};
 
-    private final ObjectMapper objectMapper;
-
-    public ProductDraft merge(ProductRaw rawProduct, ProductDraft draft, LlmProductEnrichment enrichment) {
+    public ProductDraft merge(ProductDraft draft, LlmProductEnrichment enrichment) {
         List<ProductPropertyDraft> properties = new ArrayList<>();
-        String eligibilityText = eligibilityText(rawProduct);
+        String eligibilityText = eligibilityText(draft);
         boolean incomeMentioned = mentionsIncome(draft.content(), eligibilityText);
         for (ProductPropertyDraft property : draft.properties()) {
             properties.add(merge(property, enrichment, eligibilityText, draft.type(), incomeMentioned));
@@ -227,18 +220,12 @@ public class FssEnrichmentMerger {
         return TextMatch.containsAny(value, "제외", "가입 불가", "가입불가", "대상 아님", "대상아님", "불가능");
     }
 
-    private String eligibilityText(ProductRaw rawProduct) {
-        try {
-            JsonNode base = objectMapper.readTree(rawProduct.getRawJson()).path("base");
-            List<String> parts = new ArrayList<>();
-            addIfNotBlank(parts, JsonNodes.text(base, "join_member"));
-            addIfNotBlank(parts, JsonNodes.text(base, "etc_note"));
-            return String.join(" ", parts);
-        }
-        catch (Exception e) {
-            log.debug("Failed to parse FSS eligibility text. rawId={}", rawProduct.getId(), e);
-            return "";
-        }
+    // 신분 조건 근거 문구. 정규화기가 원문의 가입대상·유의사항을 draft에 담아 두므로 소스와 무관하게 여기서 읽는다.
+    private String eligibilityText(ProductDraft draft) {
+        List<String> parts = new ArrayList<>();
+        addIfNotBlank(parts, draft.eligibilityText());
+        addIfNotBlank(parts, draft.cautionText());
+        return String.join(" ", parts);
     }
 
     private void addIfNotBlank(List<String> values, String value) {

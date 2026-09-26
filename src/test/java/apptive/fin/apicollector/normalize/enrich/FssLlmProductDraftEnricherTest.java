@@ -38,7 +38,7 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
         ProductDraft draft = draft();
@@ -93,11 +93,11 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
-        ProductDraft result = enricher.enrich(raw("중소기업 재직 청년만 가입 가능", "월 1만원 이상 가입"), draft());
+        ProductDraft result = enricher.enrich(raw(), draft("중소기업 재직 청년만 가입 가능", "월 1만원 이상 가입"));
         ProductPropertyDraft property = result.properties().getFirst();
 
         assertThat(result.productName()).isEqualTo("청년 적금");
@@ -163,7 +163,7 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
         ProductDraft draft = draftWithProperty(draft().properties().getFirst().toBuilder()
@@ -229,11 +229,11 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
-        ProductDraft result = enricher.enrich(raw("실명의 개인", "월 1만원 이상 가입"), draft());
+        ProductDraft result = enricher.enrich(raw(), draft("실명의 개인", "월 1만원 이상 가입"));
         ProductPropertyDraft property = result.properties().getFirst();
 
         assertThat(property.earnMaxAmt()).isNull();
@@ -276,11 +276,11 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
-        ProductDraft result = enricher.enrich(raw("연소득 5천만원 이하인 개인", "월 1만원 이상 가입"), draft());
+        ProductDraft result = enricher.enrich(raw(), draft("연소득 5천만원 이하인 개인", "월 1만원 이상 가입"));
         ProductPropertyDraft property = result.properties().getFirst();
 
         assertThat(property.earnMaxAmt()).isEqualTo(50_000_000L);
@@ -324,11 +324,11 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
-        ProductDraft result = enricher.enrich(raw("실명의 개인", "금융소득종합과세 대상자는 가입이 제한됩니다"), draft());
+        ProductDraft result = enricher.enrich(raw(), draft("실명의 개인", "금융소득종합과세 대상자는 가입이 제한됩니다"));
         ProductPropertyDraft property = result.properties().getFirst();
 
         assertThat(property.earnMaxAmt()).isNull();
@@ -372,11 +372,11 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
-        ProductDraft result = enricher.enrich(raw("실명의 개인", "소득공제 혜택"), draft());
+        ProductDraft result = enricher.enrich(raw(), draft("실명의 개인", "소득공제 혜택"));
         ProductPropertyDraft property = result.properties().getFirst();
 
         assertThat(property.earnMaxAmt()).isNull();
@@ -420,11 +420,11 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
-        ProductDraft result = enricher.enrich(raw("총급여 5천만원 이하인 자", "월 1만원 이상 가입"), draft());
+        ProductDraft result = enricher.enrich(raw(), draft("총급여 5천만원 이하인 자", "월 1만원 이상 가입"));
         ProductPropertyDraft property = result.properties().getFirst();
 
         assertThat(property.earnMaxAmt()).isEqualTo(50_000_000L);
@@ -467,11 +467,11 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
-        ProductDraft result = enricher.enrich(raw("총 급여액이 5천만원 이하인 자", "월 1만원 이상 가입"), draft());
+        ProductDraft result = enricher.enrich(raw(), draft("총 급여액이 5천만원 이하인 자", "월 1만원 이상 가입"));
         ProductPropertyDraft property = result.properties().getFirst();
 
         assertThat(property.earnMaxAmt()).isEqualTo(50_000_000L);
@@ -514,11 +514,11 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
-        ProductDraft result = enricher.enrich(raw("연봉 4천만원 이하", "월 1만원 이상 가입"), draft());
+        ProductDraft result = enricher.enrich(raw(), draft("연봉 4천만원 이하", "월 1만원 이상 가입"));
         ProductPropertyDraft property = result.properties().getFirst();
 
         assertThat(property.earnMaxAmt()).isEqualTo(50_000_000L);
@@ -562,7 +562,7 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -613,11 +613,11 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
-        ProductDraft result = enricher.enrich(raw("실명의 개인", "최소가입한도 100만원"), depositDraft());
+        ProductDraft result = enricher.enrich(raw(), depositDraft());
         ProductPropertyDraft property = result.properties().getFirst();
 
         assertThat(property.minDepositAmount()).isEqualTo(1_000_000L);
@@ -678,11 +678,11 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
-        ProductDraft result = enricher.enrich(raw("만 17세 이상 실명의 개인 및 개인사업자", "가입금액: 1천원 이상"), draft());
+        ProductDraft result = enricher.enrich(raw(), draft("만 17세 이상 실명의 개인 및 개인사업자", "가입금액: 1천원 이상"));
 
         assertThat(result.properties().getFirst().requiredKeywords()).isEmpty();
     }
@@ -734,14 +734,14 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
-        ProductDraft result = enricher.enrich(raw(
+        ProductDraft result = enricher.enrich(raw(), draft(
                 "중소기업 재직 청년만 가입 가능",
                 "군인은 가입 제외"
-        ), draft());
+        ));
 
         assertThat(result.properties().getFirst().requiredKeywords())
                 .extracting(RequiredKeywordDraft::keywordCode)
@@ -786,7 +786,7 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -818,7 +818,7 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
         ProductDraft draft = draft();
@@ -854,7 +854,7 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
         ProductDraft draft = draft();
@@ -914,7 +914,7 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
         ProductDraft draft = draft();
@@ -936,7 +936,7 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -1029,7 +1029,7 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -1083,7 +1083,7 @@ class FssLlmProductDraftEnricherTest {
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(objectMapper),
+                new FssEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -1106,23 +1106,24 @@ class FssLlmProductDraftEnricherTest {
     }
 
     private ProductRaw raw() {
-        return raw("실명의 개인", "월 1만원 이상 가입");
-    }
-
-    private ProductRaw raw(String joinMember, String etcNote) {
         return new ProductRaw(Source.FSS, "FSS:SAVING:001:ABC", "hash", """
                 {
                   "source": "FSS",
                   "base": {
                     "fin_prdt_nm": "청년 적금",
-                    "join_member": "%s",
-                    "etc_note": "%s"
+                    "join_member": "실명의 개인",
+                    "etc_note": "월 1만원 이상 가입"
                   }
                 }
-                """.formatted(joinMember, etcNote), ProductType.SAVING);
+                """, ProductType.SAVING);
     }
 
     private ProductDraft draft() {
+        return draft("실명의 개인", "월 1만원 이상 가입");
+    }
+
+    // FSS 정규화기가 join_member/etc_note를 담는 필드. 병합 단계의 신분·소득 가드가 이 값을 근거로 쓴다.
+    private ProductDraft draft(String eligibilityText, String cautionText) {
         return ProductDraft.builder()
                 .rawId(1L)
                 .rawSource(Source.FSS)
@@ -1132,6 +1133,8 @@ class FssLlmProductDraftEnricherTest {
                 .productCode("FSS:SAVING:001:ABC")
                 .productName("청년 적금")
                 .content("원문 설명")
+                .eligibilityText(eligibilityText)
+                .cautionText(cautionText)
                 .properties(List.of(ProductPropertyDraft.builder()
                         .providerCode("001")
                         .providerName("테스트은행")

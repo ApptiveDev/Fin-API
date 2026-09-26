@@ -5,9 +5,7 @@ import apptive.fin.apicollector.llm.LlmProductEnrichment;
 import apptive.fin.apicollector.normalize.dto.ProductDraft;
 import apptive.fin.apicollector.normalize.dto.ProductPropertyDraft;
 import apptive.fin.apicollector.product.ProductType;
-import apptive.fin.apicollector.raw.ProductRaw;
 import org.junit.jupiter.api.Test;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -15,18 +13,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class FssEnrichmentMergerTest {
 
-    private final FssEnrichmentMerger merger = new FssEnrichmentMerger(new ObjectMapper());
+    private final FssEnrichmentMerger merger = new FssEnrichmentMerger();
 
     @Test
     void deposit_fillsMinDepositAmountFromLlmWhenAbsent() {
-        ProductDraft result = merger.merge(raw(), draft(ProductType.DEPOSIT, null), enrichmentWithMinDeposit(1_000_000L));
+        ProductDraft result = merger.merge(draft(ProductType.DEPOSIT, null), enrichmentWithMinDeposit(1_000_000L));
 
         assertThat(result.properties().getFirst().minDepositAmount()).isEqualTo(1_000_000L);
     }
 
     @Test
     void deposit_prefersDeterministicMinDepositAmountOverLlm() {
-        ProductDraft result = merger.merge(raw(), draft(ProductType.DEPOSIT, 500_000L), enrichmentWithMinDeposit(1_000_000L));
+        ProductDraft result = merger.merge(draft(ProductType.DEPOSIT, 500_000L), enrichmentWithMinDeposit(1_000_000L));
 
         assertThat(result.properties().getFirst().minDepositAmount()).isEqualTo(500_000L);
     }
@@ -34,13 +32,9 @@ class FssEnrichmentMergerTest {
     @Test
     void saving_forcesMinDepositAmountNullEvenIfPresent() {
         // minDepositAmount는 예금 전용 컬럼이다. 적금이면 LLM/기존 값과 무관하게 null이어야 한다.
-        ProductDraft result = merger.merge(raw(), draft(ProductType.SAVING, 999_999L), enrichmentWithMinDeposit(1_000_000L));
+        ProductDraft result = merger.merge(draft(ProductType.SAVING, 999_999L), enrichmentWithMinDeposit(1_000_000L));
 
         assertThat(result.properties().getFirst().minDepositAmount()).isNull();
-    }
-
-    private ProductRaw raw() {
-        return new ProductRaw(Source.FSS, "FSS:DEPOSIT:001:ABC", "hash", "{\"base\":{}}", ProductType.DEPOSIT);
     }
 
     private ProductDraft draft(ProductType type, Long existingMinDepositAmount) {
