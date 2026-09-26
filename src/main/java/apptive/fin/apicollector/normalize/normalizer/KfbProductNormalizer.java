@@ -29,6 +29,7 @@ public class KfbProductNormalizer implements ProductNormalizer {
     private final FssBankNameNormalizer bankNameNormalizer;
     private final FssBankUrlNormalizer bankUrlNormalizer;
     private final KfbLimitClassifier limitClassifier;
+    private final KfbProductUrlNormalizer productUrlNormalizer;
     private final RawJsonReader rawJsonReader;
 
     public KfbProductNormalizer(
@@ -38,7 +39,8 @@ public class KfbProductNormalizer implements ProductNormalizer {
             FssRequiredKeywordExtractor requiredKeywordExtractor,
             FssBankNameNormalizer bankNameNormalizer,
             FssBankUrlNormalizer bankUrlNormalizer,
-            KfbLimitClassifier limitClassifier
+            KfbLimitClassifier limitClassifier,
+            KfbProductUrlNormalizer productUrlNormalizer
     ) {
         this.properties = properties;
         this.keywordExtractor = keywordExtractor;
@@ -46,6 +48,7 @@ public class KfbProductNormalizer implements ProductNormalizer {
         this.bankNameNormalizer = bankNameNormalizer;
         this.bankUrlNormalizer = bankUrlNormalizer;
         this.limitClassifier = limitClassifier;
+        this.productUrlNormalizer = productUrlNormalizer;
         this.rawJsonReader = new RawJsonReader(objectMapper, "KFB");
     }
 
@@ -92,7 +95,8 @@ public class KfbProductNormalizer implements ProductNormalizer {
                 .providerCode(providerCode)
                 .providerName(bankNameNormalizer.normalize(providerCode, JsonNodes.text(raw, "bankName")))
                 .providerApplyUrl(bankUrlNormalizer.normalize(providerCode).orElse(null))
-                .applyUrl(JsonNodes.text(raw, "productUrl"))
+                // 공시 원본 링크는 깨져 있거나 공백이 섞여 있기도 해서, 아웃링크로 쓸 수 있게 정규화한다.
+                .applyUrl(productUrlNormalizer.normalize(JsonNodes.text(raw, "productUrl")).orElse(null))
                 .baseRate(JsonNodes.decimal(raw, "baseRate"))
                 .maxRate(JsonNodes.decimal(raw, "maxRate"))
                 .maxDepositAmount(isPreferentialRateLimit ? null : maxLimit)

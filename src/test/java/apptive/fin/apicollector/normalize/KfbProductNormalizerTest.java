@@ -15,6 +15,7 @@ import apptive.fin.apicollector.normalize.extractor.keywords.TermKeywordRecogniz
 import apptive.fin.apicollector.normalize.normalizer.FssBankNameNormalizer;
 import apptive.fin.apicollector.normalize.normalizer.FssBankUrlNormalizer;
 import apptive.fin.apicollector.normalize.normalizer.KfbProductNormalizer;
+import apptive.fin.apicollector.normalize.normalizer.KfbProductUrlNormalizer;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import apptive.fin.apicollector.product.ProductType;
 import apptive.fin.apicollector.raw.ProductRaw;
@@ -34,7 +35,8 @@ class KfbProductNormalizerTest {
             new FssRequiredKeywordExtractor(),
             new FssBankNameNormalizer(),
             new FssBankUrlNormalizer(),
-            new KfbLimitClassifier()
+            new KfbLimitClassifier(),
+            new KfbProductUrlNormalizer()
     );
 
     @Test
@@ -113,6 +115,36 @@ class KfbProductNormalizerTest {
         ))).properties().getFirst();
 
         assertThat(property.preferentialRates()).isEmpty();
+    }
+
+    // raw에는 공시 원본 링크가 그대로 있고, 아웃링크(applyUrl)로 쓸 때 정규화한다(규칙은 KfbProductUrlNormalizerTest).
+    @Test
+    void dropsBrokenProductUrlFromApplyUrl() {
+        ProductPropertyDraft property = normalizer.normalize(raw(linkJson(
+                "0010001", "https://자유입출금상품>예금상품상세 - 우리은행"
+        ))).properties().getFirst();
+
+        assertThat(property.applyUrl()).isNull();
+    }
+
+    @Test
+    void encodesSpacesInProductUrlForApplyUrl() {
+        ProductPropertyDraft property = normalizer.normalize(raw(linkJson(
+                "0010026", "https://mybank.ibk.co.kr/uib/PNTR701000_i2.jsp?lncd= 01&grcd= 11"
+        ))).properties().getFirst();
+
+        assertThat(property.applyUrl()).isEqualTo("https://mybank.ibk.co.kr/uib/PNTR701000_i2.jsp?lncd=%2001&grcd=%2011");
+    }
+
+    private static String linkJson(String bankCode, String productUrl) {
+        return """
+                {
+                  "bankCode": "%s",
+                  "bankName": "은행",
+                  "productName": "통장",
+                  "productUrl": "%s"
+                }
+                """.formatted(bankCode, productUrl);
     }
 
     private static ProductRaw raw(String json) {

@@ -1,5 +1,6 @@
 package apptive.fin.apicollector.client.kfb;
 
+import apptive.fin.apicollector.normalize.normalizer.KfbProductUrlNormalizer;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -29,10 +30,31 @@ class KfbFreeDepositParserTest {
         assertThat(products).hasSize(45);
         assertThat(products).allSatisfy(product -> {
             assertThat(product.bankCode()).isEqualTo("0015130");
-            assertThat(product.productUrl()).startsWith("http");
             assertThat(product.baseRate()).isNotNull();
             assertThat(product.maxRate()).isNotNull();
         });
+    }
+
+    // 파서는 원본 링크를 그대로 담는다. 아웃링크 정규화·검증은 정규화 단계(KfbProductUrlNormalizer)의 몫이라 raw에 원본이 남아야 한다.
+    @Test
+    void keepsProductHrefAsIs() {
+        KfbRawProduct woori = product(parser.parseProducts("0010001", fixture(ALL_BANKS_RESULT)), "우월한 월급 통장");
+
+        assertThat(woori.productUrl()).isEqualTo("https://자유입출금상품>예금상품상세 - 우리은행");
+    }
+
+    // 실제 공시 링크를 아웃링크용으로 정규화하면, 깨진 우리은행 링크 하나만 떨어지고 나머지 44개는 살아야 한다.
+    @Test
+    void realDisclosureLinksSurviveUrlNormalizationExceptBrokenOne() {
+        KfbProductUrlNormalizer urlNormalizer = new KfbProductUrlNormalizer();
+        List<KfbRawProduct> products = parser.parseProducts("any", fixture(ALL_BANKS_RESULT));
+
+        List<String> rejected = products.stream()
+                .filter(product -> urlNormalizer.normalize(product.productUrl()).isEmpty())
+                .map(KfbRawProduct::productName)
+                .toList();
+
+        assertThat(rejected).containsExactly("우월한 월급 통장");
     }
 
     @Test

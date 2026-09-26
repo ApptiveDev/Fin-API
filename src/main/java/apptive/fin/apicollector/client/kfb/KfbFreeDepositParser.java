@@ -48,7 +48,8 @@ public class KfbFreeDepositParser {
                 bankCode,
                 clean(cells.get(0).ownText()),
                 clean(cells.get(1).text()),
-                link == null ? null : blankToNull(link.attr("href")),
+                // 원본 그대로 둔다. 아웃링크 정규화·검증은 정규화 단계(KfbProductUrlNormalizer)에서 한다.
+                link == null ? null : blankToNull(link.attr("href").trim()),
                 decimal(cells.get(2).text()),
                 decimal(cells.get(3).text()),
                 clean(cells.get(4).text()),
