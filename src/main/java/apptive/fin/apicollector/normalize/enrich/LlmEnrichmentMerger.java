@@ -1,5 +1,6 @@
 package apptive.fin.apicollector.normalize.enrich;
 
+import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.global.util.JsonNodes;
 import apptive.fin.apicollector.global.util.TextMatch;
 import apptive.fin.apicollector.llm.LlmProductEnrichment;
@@ -16,12 +17,16 @@ import apptive.fin.apicollector.product.RequiredKeywordEffect;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * LLM enrichment 결과를 정규화 draft에 병합한다(기존 값 우선, 소득/우대금리/필수키워드 규칙 적용).
@@ -34,13 +39,17 @@ public class LlmEnrichmentMerger {
             "소득공제", "소득세", "금융소득종합과세", "소득이체"
     };
     private static final String[] INCOME_TOKENS = {"소득", "총급여", "연봉"};
+    private static final Pattern PERCENT_PATTERN = Pattern.compile("(\\d+(?:\\.\\d+)?)\\s*%");
 
     public ProductDraft merge(ProductDraft draft, LlmProductEnrichment enrichment) {
         List<ProductPropertyDraft> properties = new ArrayList<>();
         String eligibilityText = eligibilityText(draft);
         boolean incomeMentioned = mentionsIncome(draft.content(), eligibilityText);
+        List<PreferentialRateDraft> enrichmentRates = draft.rawSource() == Source.KFB
+                ? percentGroundedRates(enrichment.preferentialRates(), draft.content())
+                : enrichment.preferentialRates();
         for (ProductPropertyDraft property : draft.properties()) {
-            properties.add(merge(property, enrichment, eligibilityText, draft.type(), incomeMentioned));
+            properties.add(merge(property, enrichment, enrichmentRates, eligibilityText, draft.type(), incomeMentioned));
         }
 
         return draft.toBuilder()
@@ -78,9 +87,33 @@ public class LlmEnrichmentMerger {
         return normalized;
     }
 
+    // KFB 공시 실측에서 LLM이 최고금리-기본금리처럼 원문에 없는 금리를 계산하거나, 숫자 없이 나열된 조건에
+    // 금리를 지어내 배정하는 일이 반복됐다. 공시 본문에 "N%"로 적힌 숫자와 같은 금리만 받는다.
+    // 숫자만 대조하므로 지어낸 금리가 다른 조건의 숫자와 우연히 같으면 통과한다.
+    // FSS는 이 가드로 검증하지 않았으므로 적용하지 않는다.
+    private List<PreferentialRateDraft> percentGroundedRates(List<PreferentialRateDraft> rates, String content) {
+        Set<BigDecimal> writtenRates = new HashSet<>();
+        Matcher matcher = PERCENT_PATTERN.matcher(content == null ? "" : content);
+        while (matcher.find()) {
+            writtenRates.add(new BigDecimal(matcher.group(1)).stripTrailingZeros());
+        }
+
+        List<PreferentialRateDraft> result = new ArrayList<>();
+        for (PreferentialRateDraft rate : rates) {
+            if (writtenRates.contains(rate.rate().stripTrailingZeros())) {
+                result.add(rate);
+            }
+            else {
+                log.info("Dropping LLM preferential rate not written in disclosure. rate={}", rate);
+            }
+        }
+        return List.copyOf(result);
+    }
+
     private ProductPropertyDraft merge(
             ProductPropertyDraft property,
             LlmProductEnrichment enrichment,
+            List<PreferentialRateDraft> enrichmentRates,
             String eligibilityText,
             ProductType type,
             boolean incomeMentioned
@@ -123,7 +156,7 @@ public class LlmEnrichmentMerger {
                         property.requiredKeywords(),
                         filteredRequiredKeywords(enrichment.requiredKeywords(), eligibilityText)
                 ))
-                .preferentialRates(mergePreferentialRates(property.preferentialRates(), enrichment.preferentialRates()))
+                .preferentialRates(mergePreferentialRates(property.preferentialRates(), enrichmentRates))
                 .build();
     }
 

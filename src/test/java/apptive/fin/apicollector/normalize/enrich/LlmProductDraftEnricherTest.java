@@ -1211,7 +1211,7 @@ class LlmProductDraftEnricherTest {
                 .type(ProductType.PARKING)
                 .productCode("KFB:PARKING:0011001:매일받는통장")
                 .productName("매일받는통장")
-                .content("이자지급방식: 월지급")
+                .content("이자지급방식: 월지급\n\n금액구간별 금리 차등적용 Ⅰ.1천만원이하 : 1.50% 마케팅동의 0.10%(신규시) 입출금통장첫거래 0.90%(신규시)")
                 .eligibilityText("만 14세 이상 실명의 개인")
                 .properties(List.of(ProductPropertyDraft.builder()
                         .providerCode("0011001")
