@@ -15,6 +15,7 @@ import apptive.fin.apicollector.product.ProductType;
 import apptive.fin.apicollector.product.RequiredKeywordEffect;
 import apptive.fin.apicollector.raw.ProductRaw;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
@@ -27,6 +28,9 @@ import static org.mockito.Mockito.*;
 
 class LlmProductDraftEnricherTest {
 
+    private static final List<EnrichmentPromptBuilder> PROMPT_BUILDERS =
+            List.of(new FssEnrichmentPromptBuilder(), new KfbEnrichmentPromptBuilder());
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
@@ -36,7 +40,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(false),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -91,7 +95,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -161,7 +165,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -227,7 +231,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -274,7 +278,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -322,7 +326,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -370,7 +374,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -418,7 +422,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -465,7 +469,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -512,7 +516,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -560,7 +564,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -611,7 +615,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -676,7 +680,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -732,7 +736,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -784,7 +788,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -816,7 +820,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -852,7 +856,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -912,7 +916,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -934,7 +938,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -1027,7 +1031,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -1081,7 +1085,7 @@ class LlmProductDraftEnricherTest {
         LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
-                new FssEnrichmentPromptBuilder(),
+                PROMPT_BUILDERS,
                 new LlmEnrichmentValidator(),
                 new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
@@ -1103,6 +1107,121 @@ class LlmProductDraftEnricherTest {
         assertThat(property.preferentialRates())
                 .extracting(PreferentialRateDraft::keywordCode)
                 .containsExactly(KeywordValueEnum.BANK_SALARY_TRANSFER);
+    }
+
+    @Test
+    void supportsOnlySourcesWithPromptBuilder() {
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
+                properties(true),
+                List.of(),
+                PROMPT_BUILDERS,
+                new LlmEnrichmentValidator(),
+                new LlmEnrichmentMerger(),
+                new LlmEnrichmentCacheStore(mock(LlmEnrichmentCacheRepository.class), properties(true), objectMapper)
+        );
+
+        assertThat(enricher.supportedSources()).containsExactlyInAnyOrder(Source.FSS, Source.KFB);
+        assertThat(enricher.supports(Source.KFB)).isTrue();
+        assertThat(enricher.supports(Source.ONTONG)).isFalse();
+    }
+
+    @Test
+    void enrichesKfbParkingDraftWithKfbPromptAndPreservesDisclosureFacts() {
+        // KFB는 규칙 추출 우대금리가 없어 LLM 결과가 그대로 쓰인다. 공시에서 온 금리·한도·링크는 LLM이 바꾸지 못하고,
+        // 파킹통장에는 월 납입·최소 가입금액 개념이 없어 LLM이 채워도 null이어야 한다.
+        LlmProviderClient providerClient = mock(LlmProviderClient.class);
+        LlmEnrichmentCacheRepository cacheRepository = mock(LlmEnrichmentCacheRepository.class);
+        when(providerClient.supports("GEMINI")).thenReturn(true);
+        when(providerClient.enrich(any())).thenReturn(new LlmProductEnrichment(
+                "잔액 1천만원 이하 연 1.50%, 초과분은 구간별 금리 적용",
+                List.of(),
+                10_000L, 1_000_000L, 1_000L,
+                14, null,
+                null, null,
+                false, false,
+                null, null, null, null, null,
+                false, false, null,
+                List.of(),
+                List.of(
+                        PreferentialRateDraft.builder()
+                                .keywordCode(KeywordValueEnum.BANK_MARKETING)
+                                .rate(new BigDecimal("0.10"))
+                                .description("마케팅동의(신규시)")
+                                .build(),
+                        PreferentialRateDraft.builder()
+                                .keywordCode(KeywordValueEnum.BANK_FIRST_TRANSACTION)
+                                .rate(new BigDecimal("0.90"))
+                                .description("입출금통장 첫거래(신규시)")
+                                .build()
+                )
+        ));
+        when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
+                any(), any(), any(), any(), any(), anyInt(), anyInt()
+        )).thenReturn(Optional.empty());
+
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
+                properties(true),
+                List.of(providerClient),
+                PROMPT_BUILDERS,
+                new LlmEnrichmentValidator(),
+                new LlmEnrichmentMerger(),
+                new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
+        );
+
+        ProductDraft result = enricher.enrich(kfbRaw(), kfbDraft());
+        ProductPropertyDraft property = result.properties().getFirst();
+
+        ArgumentCaptor<LlmProductEnrichmentRequest> request = ArgumentCaptor.forClass(LlmProductEnrichmentRequest.class);
+        verify(providerClient).enrich(request.capture());
+        assertThat(request.getValue().prompt()).contains("은행연합회 입출금자유예금(파킹통장)");
+
+        assertThat(result.contentSummary()).isEqualTo("잔액 1천만원 이하 연 1.50%, 초과분은 구간별 금리 적용");
+        assertThat(property.preferentialRates())
+                .extracting(PreferentialRateDraft::keywordCode)
+                .containsExactly(KeywordValueEnum.BANK_MARKETING, KeywordValueEnum.BANK_FIRST_TRANSACTION);
+        assertThat(property.minAge()).isEqualTo(14);
+        assertThat(property.minMonthlyLimit()).isNull();
+        assertThat(property.maxMonthlyLimit()).isNull();
+        assertThat(property.minDepositAmount()).isNull();
+        assertThat(property.baseRate()).isEqualByComparingTo("1.50");
+        assertThat(property.maxRate()).isEqualByComparingTo("2.50");
+        assertThat(property.maxDepositAmount()).isEqualTo(100_000_000L);
+        assertThat(property.preferentialRateLimitAmount()).isNull();
+        assertThat(property.applyUrl()).isEqualTo("https://bank.example.com/parking");
+        verify(cacheRepository).save(any(LlmEnrichmentCache.class));
+    }
+
+    private ProductRaw kfbRaw() {
+        return new ProductRaw(Source.KFB, "KFB:PARKING:0011001:매일받는통장", "hash", """
+                {
+                  "bankCode": "0011001",
+                  "productName": "매일받는통장",
+                  "preferentialCondition": "금액구간별 금리 차등적용 Ⅰ.1천만원이하 : 1.50% 마케팅동의 0.10%(신규시)",
+                  "joinTarget": "만 14세 이상 실명의 개인"
+                }
+                """, ProductType.PARKING);
+    }
+
+    private ProductDraft kfbDraft() {
+        return ProductDraft.builder()
+                .rawId(2L)
+                .rawSource(Source.KFB)
+                .normalizerVersion(1)
+                .sourceCode("KFB")
+                .type(ProductType.PARKING)
+                .productCode("KFB:PARKING:0011001:매일받는통장")
+                .productName("매일받는통장")
+                .content("이자지급방식: 월지급")
+                .eligibilityText("만 14세 이상 실명의 개인")
+                .properties(List.of(ProductPropertyDraft.builder()
+                        .providerCode("0011001")
+                        .providerName("테스트은행")
+                        .baseRate(new BigDecimal("1.50"))
+                        .maxRate(new BigDecimal("2.50"))
+                        .maxDepositAmount(100_000_000L)
+                        .applyUrl("https://bank.example.com/parking")
+                        .build()))
+                .build();
     }
 
     private ProductRaw raw() {

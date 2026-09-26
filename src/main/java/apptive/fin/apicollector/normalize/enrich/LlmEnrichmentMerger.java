@@ -85,12 +85,13 @@ public class LlmEnrichmentMerger {
             ProductType type,
             boolean incomeMentioned
     ) {
-        // 정기예금(DEPOSIT)은 월 납입 개념이 없다. min/maxMonthlyLimit은 월 납입액 전용 필드이므로
-        // 일시납 가입금액이 잘못 채워지지 않도록 null로 강제한다(LLM 준수 여부와 무관하게 보장).
+        // 월 납입 개념은 적금(SAVING)에만 있다. min/maxMonthlyLimit은 월 납입액 전용 필드이므로 정기예금의 일시납
+        // 가입금액이나 파킹통장의 예치한도가 잘못 채워지지 않도록 null로 강제한다(LLM 준수 여부와 무관하게 보장).
+        boolean isSaving = type == ProductType.SAVING;
         boolean isDeposit = type == ProductType.DEPOSIT;
         return property.toBuilder()
-                .minMonthlyLimit(isDeposit ? null : firstNonNull(property.minMonthlyLimit(), enrichment.minMonthlyLimit()))
-                .maxMonthlyLimit(isDeposit ? null : firstNonNull(property.maxMonthlyLimit(), enrichment.maxMonthlyLimit()))
+                .minMonthlyLimit(isSaving ? firstNonNull(property.minMonthlyLimit(), enrichment.minMonthlyLimit()) : null)
+                .maxMonthlyLimit(isSaving ? firstNonNull(property.maxMonthlyLimit(), enrichment.maxMonthlyLimit()) : null)
                 // minDepositAmount는 예금 전용 컬럼이다. 예금이면 결정적 값(수동입력) 우선, 없으면 LLM 값으로 채우고,
                 // 예금이 아니면 LLM이 채웠더라도 null로 강제한다(월 납입 가드와 대칭).
                 .minDepositAmount(isDeposit ? firstNonNull(property.minDepositAmount(), enrichment.minDepositAmount()) : null)

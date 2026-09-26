@@ -104,7 +104,7 @@ public class KfbProductNormalizer implements ProductNormalizer {
                 .interestPaymentMethod(interestPayment)
                 .requiredKeywords(requiredKeywordExtractor.extract(JsonNodes.text(raw, "joinTarget"), etcNote))
                 // 우대조건 칸에 잔액 구간별 금리("1억원초과 : 0.01%")가 섞여 있어 규칙 추출기가 이를 우대금리로 잘못 잡는다.
-                // 구간금리와 우대금리를 나눌 수 있을 때(LLM 보강)까지 우대금리는 싣지 않는다.
+                // 그래서 규칙 추출기는 쓰지 않고, 우대금리는 LLM 보강(KfbEnrichmentPromptBuilder)으로만 채운다.
                 .build();
     }
 
