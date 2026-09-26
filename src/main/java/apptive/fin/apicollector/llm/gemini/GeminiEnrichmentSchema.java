@@ -23,6 +23,7 @@ public class GeminiEnrichmentSchema {
         properties.set("keywords", stringArraySchema("허용된 keyword enum 목록"));
         properties.set("minMonthlyLimit", integerSchema("적금(SAVING)의 명시된 최소 월 납입액. 정기예금(DEPOSIT) 가입금액은 넣지 않는다. 없으면 null"));
         properties.set("maxMonthlyLimit", integerSchema("적금(SAVING)의 명시된 유한 최대 월 납입한도. 정기예금(DEPOSIT) 가입한도는 넣지 않는다. 없거나 제한 없음이면 null"));
+        properties.set("minDepositAmount", integerSchema("정기예금(DEPOSIT)의 명시된 최소 가입금액(최소가입한도/최소예치금액). 적금(SAVING)이거나 없으면 null"));
         properties.set("minAge", integerSchema("가입 가능 최소 나이. 없으면 null"));
         properties.set("maxAge", integerSchema("가입 가능 최대 나이. 없으면 null"));
         properties.set("earnMaxAmt", integerSchema("가입 소득 상한 금액. 없으면 null"));

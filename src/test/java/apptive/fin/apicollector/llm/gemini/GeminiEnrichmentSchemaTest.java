@@ -26,8 +26,8 @@ class GeminiEnrichmentSchemaTest {
         ObjectNode built = schema.build();
 
         assertThat(values(built.get("required")))
-                .hasSize(20)
-                .contains("summaryContent", "keywords", "requiredKeywords", "preferentialRates", "militaryMaxAge");
+                .hasSize(21)
+                .contains("summaryContent", "keywords", "minDepositAmount", "requiredKeywords", "preferentialRates", "militaryMaxAge");
     }
 
     @Test

@@ -19,6 +19,7 @@ public class LlmEnrichmentValidator {
 
         validateAmount(enrichment.minMonthlyLimit(), "minMonthlyLimit");
         validateAmount(enrichment.maxMonthlyLimit(), "maxMonthlyLimit");
+        validateAmount(enrichment.minDepositAmount(), "minDepositAmount");
         validateAmount(enrichment.earnMaxAmt(), "earnMaxAmt");
         validateRange(enrichment.minAge(), 0, 100, "minAge");
         validateRange(enrichment.maxAge(), 0, 100, "maxAge");

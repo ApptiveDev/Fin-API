@@ -71,8 +71,13 @@ public class ProductProperty {
     @Column(nullable = false)
     private Boolean excludeFromRateComparison = false;
 
+    // 적금 전용: 월 최소/최대 납입액
     private Long minMonthlyLimit;
     private Long maxMonthlyLimit;
+
+    // 예금 전용: 최소/최대 예치가능금액
+    private Long minDepositAmount;
+    private Long maxDepositAmount;
 
     private Integer minAge;
     private Integer maxAge;
@@ -160,6 +165,8 @@ public class ProductProperty {
         this.excludeFromRateComparison = propertyDraft.excludeFromRateComparison();
         this.minMonthlyLimit = propertyDraft.minMonthlyLimit();
         this.maxMonthlyLimit = propertyDraft.maxMonthlyLimit();
+        this.minDepositAmount = propertyDraft.minDepositAmount();
+        this.maxDepositAmount = propertyDraft.maxDepositAmount();
         this.minAge = propertyDraft.minAge();
         this.maxAge = propertyDraft.maxAge();
         this.allowsMilitaryAgeExtension = propertyDraft.allowsMilitaryAgeExtension();

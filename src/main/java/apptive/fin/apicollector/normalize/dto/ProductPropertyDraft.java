@@ -26,6 +26,8 @@ public record ProductPropertyDraft(
         Boolean excludeFromRateComparison,
         Long minMonthlyLimit,
         Long maxMonthlyLimit,
+        Long minDepositAmount,
+        Long maxDepositAmount,
         Integer minAge,
         Integer maxAge,
         Boolean allowsMilitaryAgeExtension,

@@ -31,4 +31,22 @@ class FssEnrichmentPromptBuilderTest {
                 .contains(raw.getRawJson())
                 .contains("JSON skeleton:");
     }
+
+    @Test
+    void build_includesMinDepositAmountGuidanceAndSkeletonKey() {
+        ProductRaw raw = new ProductRaw(
+                Source.FSS, "FSS:DEPOSIT:001", "hash", "{\"base\":{\"fin_prdt_nm\":\"정기예금\"}}", ProductType.DEPOSIT);
+        ProductDraft draft = ProductDraft.builder()
+                .productName("정기예금")
+                .type(ProductType.DEPOSIT)
+                .content("최소가입한도 100만원")
+                .build();
+
+        String prompt = promptBuilder.build(raw, draft);
+
+        assertThat(prompt)
+                .contains("minDepositAmount")
+                .contains("최소 가입금액")
+                .contains("\"minDepositAmount\": null");
+    }
 }

@@ -58,7 +58,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약된 상품 설명",
                 List.of("BANK_CARD_USAGE", "BENEFIT_TAX_FREE"),
                 10_000L,
-                1_000_000L,
+                1_000_000L, null,
                 19,
                 34,
                 50_000_000L,
@@ -136,7 +136,7 @@ class FssLlmProductDraftEnricherTest {
                 null,
                 List.of(),
                 null,
-                null,
+                null, null,
                 null,
                 null,
                 null,
@@ -202,7 +202,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약",
                 List.of(),
                 null,
-                null,
+                null, null,
                 null,
                 null,
                 50_000_000L,
@@ -249,7 +249,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약",
                 List.of(),
                 null,
-                null,
+                null, null,
                 null,
                 null,
                 50_000_000L,
@@ -297,7 +297,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약",
                 List.of(),
                 null,
-                null,
+                null, null,
                 null,
                 null,
                 50_000_000L,
@@ -345,7 +345,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약",
                 List.of(),
                 null,
-                null,
+                null, null,
                 null,
                 null,
                 50_000_000L,
@@ -393,7 +393,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약",
                 List.of(),
                 null,
-                null,
+                null, null,
                 null,
                 null,
                 50_000_000L,
@@ -440,7 +440,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약",
                 List.of(),
                 null,
-                null,
+                null, null,
                 null,
                 null,
                 50_000_000L,
@@ -487,7 +487,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약",
                 List.of(),
                 null,
-                null,
+                null, null,
                 null,
                 null,
                 50_000_000L,
@@ -535,7 +535,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약",
                 List.of(),
                 1_000_000L,
-                2_000_000L,
+                2_000_000L, null,
                 null,
                 null,
                 null,
@@ -575,7 +575,9 @@ class FssLlmProductDraftEnricherTest {
     }
 
     @Test
-    void dropsFittedRequiredKeywordsWhenEligibilityTextDoesNotExplicitlyMatch() {
+    void fillsMinDepositAmountFromLlmForDepositProducts() {
+        // 예금(DEPOSIT)은 FSS 원문에 최소 가입금액이 없다. LLM이 minDepositAmount를 채우면 예금 컬럼으로 흘러야 하고,
+        // 월 납입 컬럼(min/maxMonthlyLimit)은 예금 가드로 여전히 null이어야 한다.
         LlmProviderClient providerClient = mock(LlmProviderClient.class);
         LlmEnrichmentCacheRepository cacheRepository = mock(LlmEnrichmentCacheRepository.class);
         when(providerClient.supports("GEMINI")).thenReturn(true);
@@ -584,6 +586,56 @@ class FssLlmProductDraftEnricherTest {
                 List.of(),
                 null,
                 null,
+                1_000_000L,
+                null,
+                null,
+                null,
+                null,
+                false,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                false,
+                null,
+                List.of(),
+                List.of()
+        ));
+        when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
+                any(), any(), any(), any(), any(), anyInt(), anyInt()
+        )).thenReturn(Optional.empty());
+
+        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+                properties(true),
+                List.of(providerClient),
+                new FssEnrichmentPromptBuilder(),
+                new LlmEnrichmentValidator(),
+                new FssEnrichmentMerger(objectMapper),
+                new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
+        );
+
+        ProductDraft result = enricher.enrich(raw("실명의 개인", "최소가입한도 100만원"), depositDraft());
+        ProductPropertyDraft property = result.properties().getFirst();
+
+        assertThat(property.minDepositAmount()).isEqualTo(1_000_000L);
+        assertThat(property.minMonthlyLimit()).isNull();
+        assertThat(property.maxMonthlyLimit()).isNull();
+        verify(cacheRepository).save(any(LlmEnrichmentCache.class));
+    }
+
+    @Test
+    void dropsFittedRequiredKeywordsWhenEligibilityTextDoesNotExplicitlyMatch() {
+        LlmProviderClient providerClient = mock(LlmProviderClient.class);
+        LlmEnrichmentCacheRepository cacheRepository = mock(LlmEnrichmentCacheRepository.class);
+        when(providerClient.supports("GEMINI")).thenReturn(true);
+        when(providerClient.enrich(any())).thenReturn(new LlmProductEnrichment(
+                "요약",
+                List.of(),
+                null,
+                null, null,
                 null,
                 null,
                 null,
@@ -644,7 +696,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약",
                 List.of(),
                 null,
-                null,
+                null, null,
                 null,
                 null,
                 null,
@@ -707,7 +759,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약",
                 List.of("BANK_CARD_USAGE", "NOT_A_REAL_KEYWORD"),
                 null,
-                null,
+                null, null,
                 null,
                 null,
                 null,
@@ -823,7 +875,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약",
                 List.of(),
                 null,
-                null,
+                null, null,
                 null,
                 null,
                 null,
@@ -899,7 +951,7 @@ class FssLlmProductDraftEnricherTest {
                 "요약",
                 List.of(),
                 null,
-                null,
+                null, null,
                 null,
                 null,
                 null,
@@ -950,7 +1002,7 @@ class FssLlmProductDraftEnricherTest {
         when(providerClient.enrich(any())).thenReturn(new LlmProductEnrichment(
                 "요약",
                 List.of(),
-                null, null, null, null, null, null,
+                null, null, null, null, null, null, null,
                 false, false,
                 null, null, null, null, null,
                 false, false, null,
@@ -1015,7 +1067,7 @@ class FssLlmProductDraftEnricherTest {
         when(providerClient.enrich(any())).thenReturn(new LlmProductEnrichment(
                 "요약",
                 List.of(),
-                null, null, null, null, null, null,
+                null, null, null, null, null, null, null,
                 false, false,
                 null, null, null, null, null,
                 false, false, null,

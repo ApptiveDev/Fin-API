@@ -98,6 +98,9 @@ public class FssEnrichmentMerger {
         return property.toBuilder()
                 .minMonthlyLimit(isDeposit ? null : firstNonNull(property.minMonthlyLimit(), enrichment.minMonthlyLimit()))
                 .maxMonthlyLimit(isDeposit ? null : firstNonNull(property.maxMonthlyLimit(), enrichment.maxMonthlyLimit()))
+                // minDepositAmount는 예금 전용 컬럼이다. 예금이면 결정적 값(수동입력) 우선, 없으면 LLM 값으로 채우고,
+                // 예금이 아니면 LLM이 채웠더라도 null로 강제한다(월 납입 가드와 대칭).
+                .minDepositAmount(isDeposit ? firstNonNull(property.minDepositAmount(), enrichment.minDepositAmount()) : null)
                 .minAge(firstNonNull(property.minAge(), enrichment.minAge()))
                 .maxAge(firstNonNull(property.maxAge(), enrichment.maxAge()))
                 .earnMaxAmt(firstNonNull(property.earnMaxAmt(), incomeMentioned ? enrichment.earnMaxAmt() : null))

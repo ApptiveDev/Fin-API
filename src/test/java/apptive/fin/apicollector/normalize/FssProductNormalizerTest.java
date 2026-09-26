@@ -72,8 +72,37 @@ class FssProductNormalizerTest {
         assertThat(draft.properties().get(1).baseRate()).isEqualByComparingTo("3.5");
         assertThat(draft.properties().get(1).maxRate()).isEqualByComparingTo("4.5");
         assertThat(draft.properties().get(1).maxMonthlyLimit()).isEqualTo(300_000L);
+        // 적금은 예금 예치한도 컬럼을 쓰지 않는다.
+        assertThat(draft.properties().get(1).maxDepositAmount()).isNull();
         assertThat(draft.properties().get(1).minTenureMonths()).isNull();
         assertThat(draft.shouldSaveProduct()).isTrue();
+    }
+
+    @Test
+    void mapsDepositMaxLimitToDepositAmountColumn() {
+        ProductRaw raw = new ProductRaw(Source.FSS, "FSS:DEPOSIT:001:ABC", "hash", """
+                {
+                  "source": "FSS",
+                  "productType": "DEPOSIT",
+                  "financialGroupName": "은행",
+                  "base": {
+                    "fin_co_no": "001",
+                    "kor_co_nm": "테스트은행",
+                    "fin_prdt_nm": "정기예금",
+                    "max_limit": 1000000000
+                  },
+                  "options": [
+                    {"intr_rate_type": "S", "intr_rate_type_nm": "단리", "save_trm": "12", "intr_rate": 3.1, "intr_rate2": 3.1}
+                  ]
+                }
+                """, ProductType.DEPOSIT);
+
+        ProductDraft draft = normalizer.normalize(raw);
+
+        ProductPropertyDraft property = draft.properties().getFirst();
+        // 예금은 max_limit이 최대예치가능금액이므로 예금 컬럼에만 담기고 월납입 컬럼은 비어 있어야 한다.
+        assertThat(property.maxDepositAmount()).isEqualTo(1_000_000_000L);
+        assertThat(property.maxMonthlyLimit()).isNull();
     }
 
     @Test

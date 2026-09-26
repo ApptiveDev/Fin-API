@@ -142,7 +142,7 @@ class GeminiLlmProviderClientTest {
 
     private LlmProductEnrichment emptyEnrichment() {
         return new LlmProductEnrichment(
-                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null
         );
     }

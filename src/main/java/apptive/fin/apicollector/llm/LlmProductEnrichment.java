@@ -12,6 +12,8 @@ public record LlmProductEnrichment(
         List<String> keywords,
         Long minMonthlyLimit,
         Long maxMonthlyLimit,
+        // 예금(DEPOSIT) 전용: 원문에 명시된 최소 가입금액(최소가입한도/최소예치금액). 적금·미명시면 null.
+        Long minDepositAmount,
         Integer minAge,
         Integer maxAge,
         Long earnMaxAmt,
