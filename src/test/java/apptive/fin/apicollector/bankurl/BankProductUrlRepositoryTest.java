@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Transactional
@@ -39,10 +41,10 @@ class BankProductUrlRepositoryTest extends IntegrationTestSupport {
                 values (?, ?, true, 6), (?, ?, true, 12), (?, ?, false, 24)
                 """, productId, providerId, productId, providerId, productId, providerId);
 
-        var targets = repository.findActiveFssTargets().stream()
+        var targets = repository.findActiveTargets(List.of("FSS")).stream()
                 .filter(target -> target.productId().equals(productId))
                 .toList();
-        int updated = repository.updateActiveFssProductUrl(
+        int updated = repository.updateActiveProductUrl(
                 productId, "TEST_BANK_URL", "https://bank.example/product"
         );
 
@@ -54,5 +56,31 @@ class BankProductUrlRepositoryTest extends IntegrationTestSupport {
                 select count(*) from product_properties
                 where product_id = ? and apply_url = 'https://bank.example/product'
                 """, Integer.class, productId)).isEqualTo(2);
+    }
+
+    @Test
+    void findsTargetsOnlyOfRequestedSources() {
+        jdbcTemplate.update("insert into product_source (code, name) values ('KFB', 'KFB') on conflict (code) do nothing");
+        Long kfbProductId = seedActiveProduct("KFB", "KFB_URL_PRODUCT", "테스트파킹통장");
+        Long fssProductId = seedActiveProduct("FSS", "FSS_URL_PRODUCT", "테스트정기예금");
+
+        var kfbTargets = repository.findActiveTargets(List.of("KFB")).stream().map(BankProductUrlTarget::productId).toList();
+        var bothTargets = repository.findActiveTargets(List.of("FSS", "KFB")).stream().map(BankProductUrlTarget::productId).toList();
+
+        assertThat(kfbTargets).contains(kfbProductId).doesNotContain(fssProductId);
+        assertThat(bothTargets).contains(kfbProductId, fssProductId);
+    }
+
+    private Long seedActiveProduct(String sourceCode, String productCode, String name) {
+        Long sourceId = jdbcTemplate.queryForObject("select id from product_source where code = ?", Long.class, sourceCode);
+        Long providerId = jdbcTemplate.queryForObject("""
+                insert into provider(source_id, code, name) values (?, 'TEST_BANK_URL', '테스트은행') returning id
+                """, Long.class, sourceId);
+        Long productId = jdbcTemplate.queryForObject("""
+                insert into product(source_id, type, product_code, product_name, original_name)
+                values (?, 'PARKING', ?, ?, ?) returning id
+                """, Long.class, sourceId, productCode, name, name);
+        jdbcTemplate.update("insert into product_properties(product_id, provider_id, is_joinable) values (?, ?, true)", productId, providerId);
+        return productId;
     }
 }

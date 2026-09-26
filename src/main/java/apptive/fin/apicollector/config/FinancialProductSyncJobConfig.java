@@ -124,18 +124,20 @@ public class FinancialProductSyncJobConfig {
                 .build();
     }
 
-    // KFB는 공시에 상품 링크가 직접 있어 은행 URL 스크래핑(bankProductUrlStep)을 거치지 않는다.
+    // KFB 공시 링크는 홈페이지·다른 상품·404인 경우가 있어 FSS처럼 은행 URL 스크래핑으로 검증된 링크를 덮는다.
     @Bean
     public Flow kfbSyncFlow(
             Step fetchKfbRawStep,
             Step normalizeKfbRawProductStep,
             Step deactivateMissingProductStep,
+            Step bankProductUrlStep,
             Step resolveProductDisplayNameStep
     ) {
         return new FlowBuilder<Flow>("kfbSyncFlow")
                 .start(fetchKfbRawStep)
                 .next(normalizeKfbRawProductStep)
                 .next(deactivateMissingProductStep)
+                .next(bankProductUrlStep)
                 .next(resolveProductDisplayNameStep)
                 .build();
     }

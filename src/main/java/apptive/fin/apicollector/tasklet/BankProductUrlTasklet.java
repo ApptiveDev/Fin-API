@@ -1,5 +1,6 @@
 package apptive.fin.apicollector.tasklet;
 
+import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.bankurl.BankProductUrlPersistenceService;
 import apptive.fin.apicollector.bankurl.BankProductUrlProperties;
 import apptive.fin.apicollector.bankurl.BankProductUrlRepository;
@@ -41,7 +42,7 @@ public class BankProductUrlTasklet implements Tasklet {
         }
 
         long started = System.nanoTime();
-        List<BankProductUrlTarget> targets = repository.findActiveFssTargets();
+        List<BankProductUrlTarget> targets = repository.findActiveTargets(targetSourceCodes());
         List<ScrapeResult> results = scrapeService.scrape(targets);
         int updatedRows = persistenceService.applyPassedResults(results);
 
@@ -77,6 +78,16 @@ public class BankProductUrlTasklet implements Tasklet {
             ));
         }
         return RepeatStatus.FINISHED;
+    }
+
+    // 은행 상품 링크가 필요한 소스. FSS는 API가 링크를 주지 않고, KFB는 공시 링크가 홈페이지·다른 상품·404인 경우가 있어
+    // 두 소스 모두 은행 사이트에서 찾아 상품명까지 검증한 링크(PASS)로 덮는다.
+    private List<String> targetSourceCodes() {
+        return switch (collectorProperties.source()) {
+            case ALL -> List.of(Source.FSS.name(), Source.KFB.name());
+            case FSS, KFB -> List.of(collectorProperties.source().name());
+            case ONTONG -> List.of();
+        };
     }
 
     private long count(List<ScrapeResult> results, ScrapeStatus status) {

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface BankProductUrlRepository extends Repository<ProductProperty, Long> {
@@ -22,12 +23,12 @@ public interface BankProductUrlRepository extends Repository<ProductProperty, Lo
         from ProductProperty property
         join property.product p
         join property.provider provider
-        where p.source.code = 'FSS'
+        where p.source.code in :sourceCodes
           and property.isJoinable = true
           and provider.code is not null
         order by provider.code, p.originalName, p.id
         """)
-    List<BankProductUrlTarget> findActiveFssTargets();
+    List<BankProductUrlTarget> findActiveTargets(@Param("sourceCodes") Collection<String> sourceCodes);
 
     @Modifying(clearAutomatically = true)
     @Query("""
@@ -35,11 +36,10 @@ public interface BankProductUrlRepository extends Repository<ProductProperty, Lo
            set property.applyUrl = :url
          where property.product.id = :productId
            and property.provider.code = :providerCode
-           and property.product.source.code = 'FSS'
            and property.isJoinable = true
            and (property.applyUrl is null or property.applyUrl <> :url)
         """)
-    int updateActiveFssProductUrl(
+    int updateActiveProductUrl(
             @Param("productId") Long productId,
             @Param("providerCode") String providerCode,
             @Param("url") String url

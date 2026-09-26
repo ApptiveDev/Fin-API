@@ -23,12 +23,12 @@ class BankProductUrlPersistenceServiceTest {
         ScrapeResult pass = result(target, ScrapeStatus.PASS, "https://bank.example/pass");
         ScrapeResult warn = result(target, ScrapeStatus.WARN, "https://bank.example/warn");
         ScrapeResult fail = result(target, ScrapeStatus.FAIL, "https://bank.example/fail");
-        when(repository.updateActiveFssProductUrl(1L, "BANK", pass.productUrl())).thenReturn(2);
+        when(repository.updateActiveProductUrl(1L, "BANK", pass.productUrl())).thenReturn(2);
 
         int updated = service.applyPassedResults(List.of(pass, warn, fail));
 
         assertThat(updated).isEqualTo(2);
-        verify(repository).updateActiveFssProductUrl(1L, "BANK", pass.productUrl());
+        verify(repository).updateActiveProductUrl(1L, "BANK", pass.productUrl());
         verifyNoMoreInteractions(repository);
     }
 
