@@ -3,7 +3,7 @@ package apptive.fin.apicollector.config;
 import apptive.fin.apicollector.batch.RawProductItemReader;
 import apptive.fin.apicollector.tasklet.BankProductUrlTasklet;
 import apptive.fin.apicollector.normalize.dto.ProductDraft;
-import apptive.fin.apicollector.normalize.enrich.FssLlmProductDraftEnricher;
+import apptive.fin.apicollector.normalize.enrich.LlmProductDraftEnricher;
 import apptive.fin.apicollector.raw.ProductRaw;
 import apptive.fin.apicollector.tasklet.FetchKfbRawTasklet;
 import apptive.fin.apicollector.tasklet.FetchManualRawTasklet;
@@ -177,7 +177,7 @@ public class FinancialProductSyncJobConfig {
             ItemWriter<ProductDraft> productDraftItemWriter,
             CollectorProperties properties,
             TaskExecutor fssLlmExecutor,
-            FssLlmProductDraftEnricher fssLlmProductDraftEnricher
+            LlmProductDraftEnricher llmProductDraftEnricher
     ) {
         if (llmEnabled(properties)) {
             AsyncItemProcessor<ProductRaw, ProductDraft> asyncProcessor =
@@ -192,7 +192,7 @@ public class FinancialProductSyncJobConfig {
                     .processor(asyncProcessor)
                     .writer(asyncWriter)
                     .transactionManager(transactionManager)
-                    .listener(fssLlmProductDraftEnricher)
+                    .listener(llmProductDraftEnricher)
                     .build();
         }
 
@@ -202,7 +202,7 @@ public class FinancialProductSyncJobConfig {
                 .processor(rawProductItemProcessor)
                 .writer(productDraftItemWriter)
                 .transactionManager(transactionManager)
-                .listener(fssLlmProductDraftEnricher)
+                .listener(llmProductDraftEnricher)
                 .build();
     }
 

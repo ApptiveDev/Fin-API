@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class FssLlmProductDraftEnricher implements ProductDraftEnricher, StepExecutionListener {
+public class LlmProductDraftEnricher implements ProductDraftEnricher, StepExecutionListener {
 
     private static final Duration FAILED_RETRY_COOLDOWN = Duration.ofHours(6);
 
@@ -34,7 +34,7 @@ public class FssLlmProductDraftEnricher implements ProductDraftEnricher, StepExe
     private final List<LlmProviderClient> providerClients;
     private final FssEnrichmentPromptBuilder promptBuilder;
     private final LlmEnrichmentValidator validator;
-    private final FssEnrichmentMerger merger;
+    private final LlmEnrichmentMerger merger;
     private final LlmEnrichmentCacheStore cacheStore;
 
     private final AtomicInteger cacheHits = new AtomicInteger();

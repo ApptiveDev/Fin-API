@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class FssLlmProductDraftEnricherTest {
+class LlmProductDraftEnricherTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -33,12 +33,12 @@ class FssLlmProductDraftEnricherTest {
     void returnsOriginalDraftWhenDisabled() {
         LlmProviderClient providerClient = mock(LlmProviderClient.class);
         LlmEnrichmentCacheRepository cacheRepository = mock(LlmEnrichmentCacheRepository.class);
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(false),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
         ProductDraft draft = draft();
@@ -88,12 +88,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -158,12 +158,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
         ProductDraft draft = draftWithProperty(draft().properties().getFirst().toBuilder()
@@ -224,12 +224,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -271,12 +271,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -319,12 +319,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -367,12 +367,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -415,12 +415,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -462,12 +462,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -509,12 +509,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -557,12 +557,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -608,12 +608,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -673,12 +673,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -729,12 +729,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -781,12 +781,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -813,12 +813,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
         ProductDraft draft = draft();
@@ -849,12 +849,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.of(cache));
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
         ProductDraft draft = draft();
@@ -909,12 +909,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.of(cache));
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
         ProductDraft draft = draft();
@@ -931,12 +931,12 @@ class FssLlmProductDraftEnricherTest {
         LlmEnrichmentCacheRepository cacheRepository = mock(LlmEnrichmentCacheRepository.class);
         when(providerClient.supports("GEMINI")).thenReturn(true);
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -1024,12 +1024,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 
@@ -1078,12 +1078,12 @@ class FssLlmProductDraftEnricherTest {
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
         )).thenReturn(Optional.empty());
 
-        FssLlmProductDraftEnricher enricher = new FssLlmProductDraftEnricher(
+        LlmProductDraftEnricher enricher = new LlmProductDraftEnricher(
                 properties(true),
                 List.of(providerClient),
                 new FssEnrichmentPromptBuilder(),
                 new LlmEnrichmentValidator(),
-                new FssEnrichmentMerger(),
+                new LlmEnrichmentMerger(),
                 new LlmEnrichmentCacheStore(cacheRepository, properties(true), objectMapper)
         );
 

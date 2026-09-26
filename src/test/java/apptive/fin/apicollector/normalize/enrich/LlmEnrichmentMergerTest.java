@@ -11,9 +11,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class FssEnrichmentMergerTest {
+class LlmEnrichmentMergerTest {
 
-    private final FssEnrichmentMerger merger = new FssEnrichmentMerger();
+    private final LlmEnrichmentMerger merger = new LlmEnrichmentMerger();
 
     @Test
     void deposit_fillsMinDepositAmountFromLlmWhenAbsent() {

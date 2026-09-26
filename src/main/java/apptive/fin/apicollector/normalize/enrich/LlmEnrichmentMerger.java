@@ -28,7 +28,7 @@ import java.util.Set;
  */
 @Slf4j
 @Component
-public class FssEnrichmentMerger {
+public class LlmEnrichmentMerger {
 
     private static final String[] INCOME_IRRELEVANT_PHRASES = {
             "소득공제", "소득세", "금융소득종합과세", "소득이체"
