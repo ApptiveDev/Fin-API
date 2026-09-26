@@ -1,3 +1,5 @@
 /gradlew text eol=lf
 *.bat text eol=crlf
 *.jar binary
+# 은행연합회 응답 원본(EUC-KR) fixture. 줄바꿈 변환 없이 바이트 그대로 둔다.
+src/test/resources/kfb/*.html binary
