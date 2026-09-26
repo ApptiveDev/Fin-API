@@ -21,7 +21,9 @@ public record PreferentialRateDraft(
             case BANK_CARD_USAGE -> containsAny(description, "카드", "체크카드", "신용카드", "결제실적", "전월결제", "card", "payment");
             case BANK_AUTO_TRANSFER -> containsAny(description, "자동이체", "자동 이체");
             case BANK_MARKETING -> containsAny(description, "마케팅", "상품서비스", "개인정보", "개인(신용)정보", "수집이용", "동의");
-            case BANK_FIRST_TRANSACTION -> containsAny(description, "첫거래", "최초거래", "신규고객", "신규 고객", "첫 예금거래", "입출금통장 최초");
+            // "미보유"는 넣지 않는다. FSS 캐시에 "정기예금 미보유" 같은 BANK_ETC가 있어 ETC 판정이 뒤집힌다.
+            case BANK_FIRST_TRANSACTION -> containsAny(description, "첫거래", "첫 거래", "최초거래", "최초 거래", "신규고객", "신규 고객",
+                    "순신규", "순 신규", "첫 예금거래", "입출금통장 최초");
             case BANK_REDEPOSIT -> containsAny(description, "재예치", "재가입") && !hasAmountOrBalanceCondition(description);
             case BANK_ONLINE_JOIN -> containsAny(description, "인터넷 가입", "스마트뱅킹 가입", "비대면 가입", "모바일 가입", "온라인 가입", "online join", "mobile join");
             // BANK_AGE는 나이 구간(minAge/maxAge)이 있어야 유효하다. 구간 없는 나이 우대는
