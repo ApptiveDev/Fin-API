@@ -1,13 +1,20 @@
 package apptive.fin.apicollector.normalize.enrich;
 
+import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.normalize.dto.ProductDraft;
 import apptive.fin.apicollector.raw.ProductRaw;
 import org.springframework.stereotype.Component;
 
 /** FSS LLM enrichment 요청 프롬프트를 생성한다. */
 @Component
-public class FssEnrichmentPromptBuilder {
+public class FssEnrichmentPromptBuilder implements EnrichmentPromptBuilder {
 
+    @Override
+    public Source source() {
+        return Source.FSS;
+    }
+
+    @Override
     public String build(ProductRaw rawProduct, ProductDraft draft) {
         return """
                 금융감독원 FSS 금융상품 원문 JSON을 보고 사용자 화면에 필요한 보강값만 추출해라.
