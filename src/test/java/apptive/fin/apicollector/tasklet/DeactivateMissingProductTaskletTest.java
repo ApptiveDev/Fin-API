@@ -97,6 +97,34 @@ class DeactivateMissingProductTaskletTest {
                 org.mockito.ArgumentMatchers.eq(Source.FSS),
                 org.mockito.ArgumentMatchers.any()
         );
+        verify(productSyncService).disableAllUnseenProducts(
+                org.mockito.ArgumentMatchers.eq(Source.KFB),
+                org.mockito.ArgumentMatchers.any()
+        );
+    }
+
+    @Test
+    void deactivatesKfbOnlyWhenSourceIsKfb() {
+        DeactivateMissingProductTasklet tasklet = new DeactivateMissingProductTasklet(
+                productSyncService,
+                properties(Source.KFB, Mode.SYNC, 7)
+        );
+
+        RepeatStatus result = tasklet.execute(null, null);
+
+        assertThat(result).isEqualTo(RepeatStatus.FINISHED);
+        verify(productSyncService).disableAllUnseenProducts(
+                org.mockito.ArgumentMatchers.eq(Source.KFB),
+                org.mockito.ArgumentMatchers.any()
+        );
+        verify(productSyncService, never()).disableAllUnseenProducts(
+                org.mockito.ArgumentMatchers.eq(Source.FSS),
+                org.mockito.ArgumentMatchers.any()
+        );
+        verify(productSyncService, never()).disableAllUnseenProducts(
+                org.mockito.ArgumentMatchers.eq(Source.ONTONG),
+                org.mockito.ArgumentMatchers.any()
+        );
     }
 
     private CollectorProperties properties(Source source, Mode mode, int unseenDisablePeriod) {

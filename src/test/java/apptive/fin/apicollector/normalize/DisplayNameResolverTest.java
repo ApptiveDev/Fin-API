@@ -34,6 +34,21 @@ class DisplayNameResolverTest {
         assertThat(result).containsEntry(1L, expectedDisplay);
     }
 
+    // 은행연합회 공시도 "IBK간편한통장 (보통예금)"처럼 상품유형을 끝 괄호로 붙인다.
+    @Test
+    void stripsTrailingParenFromKfbProductAndKeepsItOnCollision() {
+        Map<Long, String> result = resolver.resolve(List.of(
+                new Item(1L, Source.KFB, "IBK간편한통장 (보통예금)"),
+                new Item(2L, Source.KFB, "Sh평생주거래우대통장 (잔액구간별)"),
+                new Item(3L, Source.KFB, "Sh평생주거래우대통장 (예치기간별)")
+        ));
+
+        assertThat(result)
+                .containsEntry(1L, "IBK간편한통장")
+                .containsEntry(2L, "Sh평생주거래우대통장 (잔액구간별)")
+                .containsEntry(3L, "Sh평생주거래우대통장 (예치기간별)");
+    }
+
     @Test
     void keepsParenWhenTwoFssProductsCollapseToSameName() {
         Map<Long, String> result = resolver.resolve(List.of(

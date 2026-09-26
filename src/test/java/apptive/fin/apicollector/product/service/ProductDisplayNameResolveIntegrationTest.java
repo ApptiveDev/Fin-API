@@ -52,6 +52,17 @@ class ProductDisplayNameResolveIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
+    void stripsTrailingParenFromKfbProducts() {
+        // KFB product_source는 Flyway 시드가 없어 첫 sync 때 생성된다. 테스트에서는 직접 넣는다.
+        jdbcTemplate.update("INSERT INTO product_source (code, name) VALUES ('KFB', 'KFB') ON CONFLICT (code) DO NOTHING");
+        seedProduct("KFB", "KFB-E1", "E통장 (보통예금)", true);
+
+        productSyncService.resolveDisplayNames();
+
+        assertThat(displayName("KFB-E1")).isEqualTo("E통장");
+    }
+
+    @Test
     void excludesInactiveProductsFromCollisionAndUpdate() {
         // 비활성(가입 불가) 상품은 판정·갱신에서 빠진다.
         // C적금(정액)은 비활성이므로, 활성 C적금(자유)는 겹치지 않아 괄호가 제거된다.

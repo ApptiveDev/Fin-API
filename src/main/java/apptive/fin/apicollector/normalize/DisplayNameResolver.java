@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 /**
  * 상품 집합 전체를 보고 디스플레이 이름(product_name)을 결정한다.
- * FSS 상품은 이름 끝 괄호를 제거하되, 제거 결과가 다른 상품과 겹치면 원본(괄호)을 유지한다.
+ * FSS·KFB 상품은 이름 끝 괄호를 제거하되, 제거 결과가 다른 상품과 겹치면 원본(괄호)을 유지한다.
  */
 @Component
 public class DisplayNameResolver {
@@ -54,7 +54,8 @@ public class DisplayNameResolver {
     }
 
     private static String baseName(Item item) {
-        if (item.source() == Source.FSS) {
+        // 은행연합회(KFB) 공시도 "IBK간편한통장 (보통예금)"처럼 끝 괄호에 상품유형을 붙여 FSS와 같은 규칙을 쓴다.
+        if (item.source() == Source.FSS || item.source() == Source.KFB) {
             return stripTrailingParen(item.originalName());
         }
         return item.originalName();

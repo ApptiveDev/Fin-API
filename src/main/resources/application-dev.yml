@@ -28,7 +28,7 @@ logging:
 collector:
   enabled: true
   # ONTONG = 수동 정부 정책상품(manual-products.json) 동기화. 온통청년 API 폐기로 FetchManualRawTasklet이 원천.
-  # FSS(은행 공시)까지 함께 돌리려면 ALL 로 변경.
+  # FSS(은행 공시)까지 함께 돌리려면 ALL 로 변경. KFB = 은행연합회 입출금자유예금(파킹통장) 공시.
   source: ALL
   mode: SYNC
   # REQ-001 상품명 후행 괄호 제거 재정규화를 위해 27 -> 28. (PR #20이 27로 올린 것 위에 얹음)
