@@ -39,6 +39,11 @@ public record ProductPropertyDraft(
         Boolean requiresHouseholder,
         String applyUrl,
         String providerApplyUrl,
+        // 아래 두 값은 저장 컬럼이 정해지지 않아 draft에만 싣는다(ProductProperty.applyDraft에서 쓰지 않음).
+        // 파킹통장 최고금리 적용 한도(원). 예치 한도와 다르다.
+        Long preferentialRateLimitAmount,
+        // 이자지급방식 원문(예: "수시지급,월지급")
+        String interestPaymentMethod,
         List<KeywordValueEnum> keywords,
         List<RequiredKeywordDraft> requiredKeywords,
         List<PreferentialRateDraft> preferentialRates
