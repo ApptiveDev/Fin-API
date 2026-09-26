@@ -2,6 +2,7 @@ package apptive.fin.apicollector.config;
 
 import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.batch.RawProductItemReader;
+import apptive.fin.apicollector.normalize.enrich.LlmProductDraftEnricher;
 import apptive.fin.apicollector.raw.ProductRawRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -15,12 +16,14 @@ public class ItemReaderConfig {
     @StepScope
     public RawProductItemReader fssRawProductItemReader(
             ProductRawRepository repository,
-            CollectorProperties properties
+            CollectorProperties properties,
+            LlmProductDraftEnricher llmProductDraftEnricher
     ) {
         return new RawProductItemReader(
                 repository,
                 properties,
-                Source.FSS
+                Source.FSS,
+                llmProductDraftEnricher.supportedSources()
         );
     }
 
@@ -28,12 +31,14 @@ public class ItemReaderConfig {
     @StepScope
     public RawProductItemReader ontongRawProductItemReader(
             ProductRawRepository repository,
-            CollectorProperties properties
+            CollectorProperties properties,
+            LlmProductDraftEnricher llmProductDraftEnricher
     ) {
         return new RawProductItemReader(
                 repository,
                 properties,
-                Source.ONTONG
+                Source.ONTONG,
+                llmProductDraftEnricher.supportedSources()
         );
     }
 
@@ -41,12 +46,14 @@ public class ItemReaderConfig {
     @StepScope
     public RawProductItemReader kfbRawProductItemReader(
             ProductRawRepository repository,
-            CollectorProperties properties
+            CollectorProperties properties,
+            LlmProductDraftEnricher llmProductDraftEnricher
     ) {
         return new RawProductItemReader(
                 repository,
                 properties,
-                Source.KFB
+                Source.KFB,
+                llmProductDraftEnricher.supportedSources()
         );
     }
 }
