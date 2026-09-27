@@ -17,7 +17,7 @@ public final class BankProductScrapers {
                 new HanaBankScraper(),
                 new IbkBankScraper(),
                 new ImBankScraper(objectMapper),
-                new JejuBankScraper(),
+                new JejuBankScraper(objectMapper),
                 new JeonbukBankScraper(objectMapper),
                 new KakaoBankScraper(),
                 new KbankScraper(objectMapper),
