@@ -177,7 +177,8 @@ public class ProductProperty {
         this.requiresHomeless = propertyDraft.requiresHomeless();
         this.requiresHouseholder = propertyDraft.requiresHouseholder();
         this.isJoinable = true;
-        if (!preserveExistingApplyUrl || propertyDraft.applyUrl() != null) {
+        // 보존 모드에서는 기존 링크(은행 URL 스크래퍼가 검증한 것)를 유지하고, 비어 있을 때만 draft 값으로 채운다.
+        if (!preserveExistingApplyUrl || this.applyUrl == null) {
             this.applyUrl = propertyDraft.applyUrl();
         }
         this.intrRateType = InterestRateType.fromCode(propertyDraft.intrRateType());

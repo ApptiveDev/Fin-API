@@ -199,6 +199,35 @@ class ProductTest {
                 .isEqualTo("https://bank.example/product");
     }
 
+    // KFB는 draft에 공시 링크가 있지만, 은행 URL 스크래퍼가 검증해 넣은 링크를 다시 정규화할 때 덮으면 안 된다.
+    @Test
+    void replacePropertiesPreservesExistingApplyUrlEvenWhenDraftHasAnother() {
+        Product product = newProduct();
+        Provider provider = newProvider(product.getSource());
+        product.replaceProperties(List.of(withApplyUrl("https://bank.example/verified")), ignored -> provider);
+
+        product.replaceProperties(List.of(withApplyUrl("https://bank.example/disclosure")), ignored -> provider, true);
+
+        assertThat(product.getProperties().getFirst().getApplyUrl())
+                .isEqualTo("https://bank.example/verified");
+    }
+
+    @Test
+    void replacePropertiesFillsMissingApplyUrlFromDraftWhenPreserving() {
+        Product product = newProduct();
+        Provider provider = newProvider(product.getSource());
+        product.replaceProperties(List.of(draft(12, "F", new BigDecimal("3.00"))), ignored -> provider);
+
+        product.replaceProperties(List.of(withApplyUrl("https://bank.example/disclosure")), ignored -> provider, true);
+
+        assertThat(product.getProperties().getFirst().getApplyUrl())
+                .isEqualTo("https://bank.example/disclosure");
+    }
+
+    private static ProductPropertyDraft withApplyUrl(String applyUrl) {
+        return draft(12, "F", new BigDecimal("3.00")).toBuilder().applyUrl(applyUrl).build();
+    }
+
     @Test
     void replaceKeywordsReusesExistingKeywordsAndAddsOnlyMissingOnes() {
         ProductSource source = ProductSource.create("ONTONG_YOUTH", "ONTONG_YOUTH");

@@ -99,7 +99,8 @@ public class ProductSyncService {
         product.replaceProperties(
                 draft.properties(),
                 propertyDraft -> resolveProvider(source, propertyDraft),
-                Source.FSS.name().equals(draft.sourceCode())
+                // 두 소스의 apply_url은 BankProductUrlTasklet이 검증해 덮으므로, 재정규화가 그 값을 되돌리지 않게 한다.
+                Source.FSS.name().equals(draft.sourceCode()) || Source.KFB.name().equals(draft.sourceCode())
         );
 
         markNormalized(draft);
