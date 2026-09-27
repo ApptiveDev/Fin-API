@@ -1,5 +1,6 @@
 package apptive.fin.apicollector.client.kfb;
 
+import apptive.fin.apicollector.bankurl.scraper.BankProductScrapers;
 import apptive.fin.apicollector.normalize.normalizer.KfbProductUrlNormalizer;
 import org.junit.jupiter.api.Test;
 
@@ -64,18 +65,26 @@ class KfbFreeDepositParserTest {
         assertThat(woori.productUrl()).isEqualTo("https://자유입출금상품>예금상품상세 - 우리은행");
     }
 
-    // 실제 공시 링크를 아웃링크용으로 정규화하면, 깨진 우리은행 링크 하나만 떨어지고 나머지 44개는 살아야 한다.
+    // 실제 공시 링크를 은행 도메인과 대조하면 깨진 우리은행 링크, 홈페이지만 가리키는 전북은행 4건,
+    // 은행 도메인 밖(앱 딥링크 onelink.me)인 부산은행 1건이 떨어지고 나머지는 살아야 한다. 떨어진 상품은 스크래퍼가 채운다.
     @Test
-    void realDisclosureLinksSurviveUrlNormalizationExceptBrokenOne() {
-        KfbProductUrlNormalizer urlNormalizer = new KfbProductUrlNormalizer();
+    void realDisclosureLinksSurviveUrlNormalizationExceptBrokenHomeAndForeignOnes() {
+        KfbProductUrlNormalizer urlNormalizer = new KfbProductUrlNormalizer(BankProductScrapers.all());
         List<KfbRawProduct> products = realProducts();
 
         List<String> rejected = products.stream()
-                .filter(product -> urlNormalizer.normalize(product.productUrl()).isEmpty())
-                .map(KfbRawProduct::productName)
+                .filter(product -> urlNormalizer.normalize(product.bankCode(), product.productUrl()).isEmpty())
+                .map(product -> product.bankName() + "/" + product.productName())
                 .toList();
 
-        assertThat(rejected).containsExactly("우월한 월급 통장");
+        assertThat(rejected).containsExactlyInAnyOrder(
+                "우리은행/우월한 월급 통장",
+                "BNK부산은행/마!이통장",
+                "전북은행/씨드모아(카드우대) 통장",
+                "전북은행/씨드모아(고액우대) 통장",
+                "전북은행/씨드모아(소액우대) 통장",
+                "전북은행/JB 언택트 통장"
+        );
     }
 
     @Test
