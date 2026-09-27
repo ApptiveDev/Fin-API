@@ -9,6 +9,7 @@ import java.nio.charset.Charset;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class KfbFreeDepositParserTest {
 
@@ -25,20 +26,40 @@ class KfbFreeDepositParserTest {
 
     @Test
     void parsesEveryProductRowWithItsDetailRow() {
-        List<KfbRawProduct> products = parser.parseProducts("0015130", fixture(ALL_BANKS_RESULT));
+        List<KfbRawProduct> products = realProducts();
 
         assertThat(products).hasSize(45);
         assertThat(products).allSatisfy(product -> {
-            assertThat(product.bankCode()).isEqualTo("0015130");
             assertThat(product.baseRate()).isNotNull();
             assertThat(product.maxRate()).isNotNull();
         });
     }
 
+    // 결과 행에는 은행코드가 없어서, 검색 페이지 라벨과 은행명이 같아야 코드가 붙는다. 실제 공시의 모든 행이 맞아야 한다.
+    @Test
+    void mapsEveryRowToBankCodeByBankLabel() {
+        List<KfbBank> banks = parser.parseBanks(fixture("free_deposit.html"));
+        List<KfbRawProduct> products = parser.parseProducts(fixture(ALL_BANKS_RESULT), banks);
+
+        assertThat(products).allSatisfy(product ->
+                assertThat(banks).contains(new KfbBank(product.bankCode(), product.bankName())));
+        assertThat(product(products, "세이프박스").bankCode()).isEqualTo("0015130");
+        assertThat(product(products, "IBK간편한통장 (보통예금)").bankCode()).isEqualTo("0010026");
+    }
+
+    @Test
+    void failsWhenRowBankIsMissingFromSearchPage() {
+        List<KfbBank> banks = List.of(new KfbBank("0015130", "카카오뱅크"));
+
+        assertThatThrownBy(() -> parser.parseProducts(fixture(ALL_BANKS_RESULT), banks))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("bankName=");
+    }
+
     // 파서는 원본 링크를 그대로 담는다. 아웃링크 정규화·검증은 정규화 단계(KfbProductUrlNormalizer)의 몫이라 raw에 원본이 남아야 한다.
     @Test
     void keepsProductHrefAsIs() {
-        KfbRawProduct woori = product(parser.parseProducts("0010001", fixture(ALL_BANKS_RESULT)), "우월한 월급 통장");
+        KfbRawProduct woori = product(realProducts(), "우월한 월급 통장");
 
         assertThat(woori.productUrl()).isEqualTo("https://자유입출금상품>예금상품상세 - 우리은행");
     }
@@ -47,7 +68,7 @@ class KfbFreeDepositParserTest {
     @Test
     void realDisclosureLinksSurviveUrlNormalizationExceptBrokenOne() {
         KfbProductUrlNormalizer urlNormalizer = new KfbProductUrlNormalizer();
-        List<KfbRawProduct> products = parser.parseProducts("any", fixture(ALL_BANKS_RESULT));
+        List<KfbRawProduct> products = realProducts();
 
         List<String> rejected = products.stream()
                 .filter(product -> urlNormalizer.normalize(product.productUrl()).isEmpty())
@@ -59,7 +80,7 @@ class KfbFreeDepositParserTest {
 
     @Test
     void mapsListColumnsAndDetailLabelsToFields() {
-        KfbRawProduct safeBox = product(parser.parseProducts("0015130", fixture(ALL_BANKS_RESULT)), "세이프박스");
+        KfbRawProduct safeBox = product(realProducts(), "세이프박스");
 
         assertThat(safeBox.bankName()).isEqualTo("카카오뱅크");
         assertThat(safeBox.baseRate()).isEqualByComparingTo("1.60");
@@ -74,7 +95,7 @@ class KfbFreeDepositParserTest {
 
     @Test
     void keepsLineBreaksInDetailText() {
-        KfbRawProduct safeBox = product(parser.parseProducts("0015130", fixture(ALL_BANKS_RESULT)), "세이프박스");
+        KfbRawProduct safeBox = product(realProducts(), "세이프박스");
 
         assertThat(safeBox.etcNote().lines().toList()).containsExactly(
                 "1. 상품설명 : 예비자금을 언제든지 입금하고 출금할 수 있는 계좌 속 금고",
@@ -86,7 +107,7 @@ class KfbFreeDepositParserTest {
 
     @Test
     void collapsesLineBreakInProductName() {
-        List<KfbRawProduct> products = parser.parseProducts("0014807", fixture(ALL_BANKS_RESULT));
+        List<KfbRawProduct> products = realProducts();
 
         assertThat(products).extracting(KfbRawProduct::productName)
                 .contains("Sh평생주거래우대통장 (잔액구간별)", "Sh평생주거래우대통장 (예치기간별)");
@@ -94,7 +115,7 @@ class KfbFreeDepositParserTest {
 
     @Test
     void leavesMaxLimitNullWhenBlank() {
-        KfbRawProduct kdb = product(parser.parseProducts("0010030", fixture(ALL_BANKS_RESULT)), "KDB Hi 입출금통장");
+        KfbRawProduct kdb = product(realProducts(), "KDB Hi 입출금통장");
 
         assertThat(kdb.maxLimit()).isNull();
     }
@@ -106,6 +127,12 @@ class KfbFreeDepositParserTest {
                 .filter(product -> name.equals(product.productName()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("no product named " + name));
+    }
+
+    // 실제 검색 페이지의 은행 목록으로 실제 전체 은행 응답을 파싱한 45개 상품
+    static List<KfbRawProduct> realProducts() {
+        KfbFreeDepositParser parser = new KfbFreeDepositParser();
+        return parser.parseProducts(fixture(ALL_BANKS_RESULT), parser.parseBanks(fixture("free_deposit.html")));
     }
 
     // 실제 응답(2026-09-27, EUC-KR 원본 바이트)을 그대로 둔 fixture

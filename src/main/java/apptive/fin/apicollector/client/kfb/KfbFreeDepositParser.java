@@ -31,22 +31,32 @@ public class KfbFreeDepositParser {
     }
 
     /**
-     * 응답 행에는 은행코드가 없어서, 은행 하나로 조회한 응답과 그 은행코드를 함께 받는다.
+     * 응답 행에는 은행코드가 없어서, 행의 은행명을 검색 페이지의 은행 라벨과 맞춰 코드를 붙인다.
+     * 라벨에 없는 은행명이 나오면 코드 없이 저장할 수 없으므로 실패시킨다.
      */
-    public List<KfbRawProduct> parseProducts(String bankCode, String html) {
+    public List<KfbRawProduct> parseProducts(String html, List<KfbBank> banks) {
+        Map<String, String> codeByName = new HashMap<>();
+        for (KfbBank bank : banks) {
+            codeByName.put(bank.name(), bank.code());
+        }
         return Jsoup.parse(html).select("table.resultList_ty02 tr:has(td.tl)").stream()
-                .map(row -> toProduct(bankCode, row))
+                .map(row -> toProduct(codeByName, row))
                 .toList();
     }
 
-    private static KfbRawProduct toProduct(String bankCode, Element row) {
+    private static KfbRawProduct toProduct(Map<String, String> codeByName, Element row) {
         Elements cells = row.select("> td");
+        String bankName = clean(cells.get(0).ownText());
+        String bankCode = codeByName.get(bankName);
+        if (bankCode == null) {
+            throw new IllegalStateException("KFB result row has a bank name missing from the search page. bankName=" + bankName);
+        }
         Element link = cells.get(1).selectFirst("a");
         Map<String, String> details = details(row.nextElementSibling());
 
         return new KfbRawProduct(
                 bankCode,
-                clean(cells.get(0).ownText()),
+                bankName,
                 clean(cells.get(1).text()),
                 // 원본 그대로 둔다. 아웃링크 정규화·검증은 정규화 단계(KfbProductUrlNormalizer)에서 한다.
                 link == null ? null : blankToNull(link.attr("href").trim()),

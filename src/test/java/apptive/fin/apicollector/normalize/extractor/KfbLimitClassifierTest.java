@@ -60,9 +60,13 @@ class KfbLimitClassifierTest {
     }
 
     private static List<KfbRawProduct> realProducts() {
-        try (InputStream in = KfbLimitClassifierTest.class.getResourceAsStream("/kfb/free_deposit_search_result_all_banks.html")) {
-            String html = new String(in.readAllBytes(), Charset.forName("MS949"));
-            return new KfbFreeDepositParser().parseProducts("any", html);
+        KfbFreeDepositParser parser = new KfbFreeDepositParser();
+        return parser.parseProducts(fixture("free_deposit_search_result_all_banks.html"), parser.parseBanks(fixture("free_deposit.html")));
+    }
+
+    private static String fixture(String name) {
+        try (InputStream in = KfbLimitClassifierTest.class.getResourceAsStream("/kfb/" + name)) {
+            return new String(in.readAllBytes(), Charset.forName("MS949"));
         }
         catch (IOException e) {
             throw new IllegalStateException(e);

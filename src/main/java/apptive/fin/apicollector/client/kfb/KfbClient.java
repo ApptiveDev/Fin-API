@@ -8,14 +8,14 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 은행연합회 소비자포털 입출금자유예금 비교공시 수집.
  *
- * <p>목록은 검색 페이지의 JS가 부르는 결과 조각(HTML)을 그대로 받는다. 결과 행에 은행코드가 없어서
- * 은행마다 따로 조회해 코드를 확정한다. 응답은 EUC-KR이며, 확장 한글까지 안전하게 MS949로 디코딩한다.
+ * <p>목록은 검색 페이지의 JS가 부르는 결과 조각(HTML)을 그대로 받는다. 은행코드를 "|"로 이어 보내면
+ * 전체 은행이 한 응답으로 온다. 응답은 EUC-KR이며, 확장 한글까지 안전하게 MS949로 디코딩한다.
  */
 @Component
 public class KfbClient {
@@ -37,12 +37,8 @@ public class KfbClient {
 
     public List<KfbRawProduct> fetchAll() {
         List<KfbBank> banks = parser.parseBanks(searchPage());
-
-        List<KfbRawProduct> result = new ArrayList<>();
-        for (KfbBank bank : banks) {
-            result.addAll(parser.parseProducts(bank.code(), searchResult(bank.code())));
-        }
-        return result;
+        String bankValue = banks.stream().map(KfbBank::code).collect(Collectors.joining("|"));
+        return parser.parseProducts(searchResult(bankValue), banks);
     }
 
     private String searchPage() {
@@ -52,11 +48,11 @@ public class KfbClient {
                 .body(byte[].class));
     }
 
-    // 검색 페이지의 FP_FreeDepositSearch_sort()가 보내는 값 그대로. 필터는 모두 "전체"다.
-    private String searchResult(String bankCode) {
+    // 검색 페이지의 FP_FreeDepositSearch_sort()가 보내는 값 그대로. 은행 외 필터는 모두 "전체"다.
+    private String searchResult(String bankValue) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("InterestType", "");
-        form.add("BankValue", bankCode);
+        form.add("BankValue", bankValue);
         form.add("InterestMonth", "BANK_ORDER");
         form.add("OrderByType", "ASC");
         form.add("JOIN_METHOD", "");
