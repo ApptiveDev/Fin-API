@@ -184,6 +184,31 @@ class RegionalBankScrapersTest {
     }
 
     @Test
+    void jeonbukPrefersMatchingSavingsTypeAmongVariantsOfSameProduct() {
+        JeonbukBankScraper scraper = new JeonbukBankScraper(objectMapper);
+        ProductCandidate fixed = new ProductCandidate("JB 다이렉트적금(정액적립식)", "https://m.jbbank.co.kr/fixed");
+        List<ProductCandidate> candidates = List.of(
+                new ProductCandidate("JB 다이렉트적금(자유적립식)", "https://m.jbbank.co.kr/free"),
+                fixed
+        );
+
+        assertThat(scraper.preferMatchingSavingsType("JB 다이렉트적금(정액적립식)", candidates)).containsExactly(fixed);
+    }
+
+    // 목록이 넓어져(예금·적금·입출금) 다른 상품의 같은 적립식 표시가 후보에 섞여도, 표시 없이 올라온 같은 상품을 남긴다.
+    @Test
+    void jeonbukDoesNotPreferOtherProductJustBecauseItHasSavingsTypeMarker() {
+        JeonbukBankScraper scraper = new JeonbukBankScraper(objectMapper);
+        ProductCandidate sameProduct = new ProductCandidate("JB 123 적금", "https://m.jbbank.co.kr/123");
+        List<ProductCandidate> candidates = List.of(
+                new ProductCandidate("JB 슈퍼씨드 적금(정액적립식)", "https://m.jbbank.co.kr/other"),
+                sameProduct
+        );
+
+        assertThat(scraper.preferMatchingSavingsType("JB 123 적금(정액적립식)", candidates)).containsExactly(sameProduct);
+    }
+
+    @Test
     void jeonbukBuildsEncodedMobileDetailUrl() {
         var payload = objectMapper.readTree("""
                 {"GRID":[{

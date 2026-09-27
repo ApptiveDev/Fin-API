@@ -113,37 +113,12 @@ public class JejuBankScraper extends AbstractBankProductScraper {
         return dedupe(candidates);
     }
 
-    // 같은 상품의 지급식 변형(예: 제주Dream정기예금 월이자형/만기형)을 가른다. 전체 목록에서 표시("만기")만으로 거르면
-    // 이름에 표시가 없는 진짜 상품(J정기예금)이 빠지고 다른 상품(정기예금 (만기이자지급식))이 남으므로,
-    // 괄호를 뺀 기본 이름이 같은 후보가 있으면 그 안에서만 고른다.
+    // 지급식 변형(예: 제주Dream정기예금 월이자형/만기형)을 가른다.
     List<ProductCandidate> preferMatchingInterestType(
             String productName,
             List<ProductCandidate> candidates
     ) {
-        String baseName = compact(withoutParentheses(productName));
-        List<ProductCandidate> variants = candidates.stream()
-                .filter(candidate -> compact(withoutParentheses(candidate.name())).equals(baseName))
-                .toList();
-        if (variants.isEmpty()) {
-            return candidates;
-        }
-        String target = compact(productName);
-        for (String marker : List.of("만기", "월이자", "선이자")) {
-            if (!target.contains(marker)) {
-                continue;
-            }
-            List<ProductCandidate> matching = variants.stream()
-                    .filter(candidate -> compact(candidate.name()).contains(marker))
-                    .toList();
-            if (!matching.isEmpty()) {
-                return matching;
-            }
-        }
-        return variants;
-    }
-
-    private String withoutParentheses(String value) {
-        return value.replaceAll("\\([^)]*\\)", " ");
+        return preferVariantOfSameProduct(productName, candidates, List.of("만기", "월이자", "선이자"));
     }
 
     private List<String> jejuQueryVariants(String productName) {

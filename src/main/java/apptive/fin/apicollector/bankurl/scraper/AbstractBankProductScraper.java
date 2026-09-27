@@ -150,6 +150,44 @@ public abstract class AbstractBankProductScraper implements BankProductScraper {
         return cleanText(block.text());
     }
 
+    // 같은 상품의 변형(적립식·지급식 등)을 이름의 표시 단어(markers)로 가른다. 표시만 보고 전체 후보를 거르면
+    // 표시 없이 올라온 진짜 상품(J정기예금)이 빠지고 표시가 있는 다른 상품(정기예금 (만기이자지급식))이 남는다.
+    // 그래서 괄호를 뺀 기본 이름이 같은 후보가 있으면 그 안에서만 고르고, 없으면 후보를 그대로 둔다.
+    protected List<ProductCandidate> preferVariantOfSameProduct(
+            String productName,
+            List<ProductCandidate> candidates,
+            List<String> markers
+    ) {
+        String baseName = variantKey(withoutParentheses(productName));
+        List<ProductCandidate> variants = candidates.stream()
+                .filter(candidate -> variantKey(withoutParentheses(candidate.name())).equals(baseName))
+                .toList();
+        if (variants.isEmpty()) {
+            return candidates;
+        }
+        String target = variantKey(productName);
+        for (String marker : markers) {
+            if (!target.contains(marker)) {
+                continue;
+            }
+            List<ProductCandidate> matching = variants.stream()
+                    .filter(candidate -> variantKey(candidate.name()).contains(marker))
+                    .toList();
+            if (!matching.isEmpty()) {
+                return matching;
+            }
+        }
+        return variants;
+    }
+
+    private static String variantKey(String value) {
+        return value == null ? "" : value.replaceAll("[^0-9a-zA-Z가-힣]", "").toLowerCase(Locale.ROOT);
+    }
+
+    private static String withoutParentheses(String value) {
+        return value.replaceAll("\\([^)]*\\)", " ");
+    }
+
     // 유사도는 괄호 안을 지우고 비교해 "씨드모아(소액우대)"와 "씨드모아(고액우대)"가 동점이 된다.
     // 괄호까지 같은 후보가 있으면 그것을 먼저 고르고, 없을 때만 유사도로 고른다.
     protected ProductCandidate select(List<ProductCandidate> candidates, String productName) {

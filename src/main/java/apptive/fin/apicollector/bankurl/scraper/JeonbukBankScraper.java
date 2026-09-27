@@ -90,23 +90,12 @@ public class JeonbukBankScraper extends AbstractBankProductScraper {
         return List.copyOf(products.values());
     }
 
+    // 적립식 변형(예: JB 다이렉트적금 정액적립식/자유적립식)을 가른다.
     List<ProductCandidate> preferMatchingSavingsType(
             String productName,
             List<ProductCandidate> candidates
     ) {
-        if (productName.contains("정액적립")) {
-            List<ProductCandidate> preferred = candidates.stream()
-                    .filter(candidate -> candidate.name().contains("정액적립"))
-                    .toList();
-            return preferred.isEmpty() ? candidates : preferred;
-        }
-        if (productName.contains("자유적립")) {
-            List<ProductCandidate> preferred = candidates.stream()
-                    .filter(candidate -> candidate.name().contains("자유적립"))
-                    .toList();
-            return preferred.isEmpty() ? candidates : preferred;
-        }
-        return candidates;
+        return preferVariantOfSameProduct(productName, candidates, List.of("정액적립", "자유적립"));
     }
 
     private void collectProductResponse(Response response, Map<String, ProductCandidate> products) {
