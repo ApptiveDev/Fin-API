@@ -32,7 +32,7 @@ class RegionalBankScrapersTest {
 
         assertThat(result).containsExactly(new ProductCandidate(
                 "BNK 위더스자유적금",
-                "https://www.knbank.co.kr/ib20/mnu/FPMDPT020103000?fnc_prd_no=0000020178"
+                "https://www.knbank.co.kr/ib20/mnu/FPMCOM990000000?FNC_PRD_NO=0000020178&DUP_CHK=N"
         ));
     }
 

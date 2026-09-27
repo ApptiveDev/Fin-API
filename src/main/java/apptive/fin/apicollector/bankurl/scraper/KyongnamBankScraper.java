@@ -14,10 +14,15 @@ import java.util.regex.Pattern;
 @Component
 public class KyongnamBankScraper extends AbstractBankProductScraper {
 
+    // 통합검색은 띄어쓰기가 다르면(공시 "든든연금통장" vs 사이트 "든든 연금통장") 결과가 없어서 상품 목록도 함께 본다.
+    // 적금(FPMDPT020103000)과 입출금(FPMDPT020102000, KFB 파킹통장) 목록.
     private static final List<String> URLS = List.of(
             "https://www.knbank.co.kr/ib20/mnu/UFSSER000000001?collection=ALL&query={q}&language=kr",
-            "https://www.knbank.co.kr/ib20/mnu/FPMDPT020103000"
+            "https://www.knbank.co.kr/ib20/mnu/FPMDPT020103000",
+            "https://www.knbank.co.kr/ib20/mnu/FPMDPT020102000"
     );
+    // 목록 URL에 상품번호를 붙이면 상세가 아니라 목록이 다시 열린다. 전체상품 상세는 이 형식으로 열린다.
+    private static final String DETAIL_PATH = "/ib20/mnu/FPMCOM990000000?FNC_PRD_NO=";
 
     @Override
     public String providerCode() {
@@ -63,7 +68,7 @@ public class KyongnamBankScraper extends AbstractBankProductScraper {
             if (looksLikeProductName(name)) {
                 candidates.add(new ProductCandidate(
                         name,
-                        absoluteUrl("/ib20/mnu/FPMDPT020103000?fnc_prd_no=" + matcher.group(1), currentUrl)
+                        absoluteUrl(DETAIL_PATH + matcher.group(1) + "&DUP_CHK=N", currentUrl)
                 ));
             }
         }
