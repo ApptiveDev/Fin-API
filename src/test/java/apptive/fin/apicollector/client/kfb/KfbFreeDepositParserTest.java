@@ -120,6 +120,44 @@ class KfbFreeDepositParserTest {
         assertThat(kdb.maxLimit()).isNull();
     }
 
+    // 금리 칸이 숫자가 아니어도 그 칸만 비우고, 나머지 행은 정상으로 읽는다.
+    @Test
+    void readsRateCellLeniently() {
+        List<KfbRawProduct> products = parser.parseProducts(resultTable(
+                row("가통장", "-", "1.70%"),
+                row("나통장", "", "1,000.00")
+        ), BANKS);
+
+        assertThat(products).extracting(KfbRawProduct::productName).containsExactly("가통장", "나통장");
+        assertThat(products.get(0).baseRate()).isNull();
+        assertThat(products.get(0).maxRate()).isEqualByComparingTo("1.70");
+        assertThat(products.get(1).baseRate()).isNull();
+        assertThat(products.get(1).maxRate()).isEqualByComparingTo("1000.00");
+    }
+
+    @Test
+    void skipsRowWithTooFewCells() {
+        List<KfbRawProduct> products = parser.parseProducts(resultTable(
+                "<tr><td class=\"tl\">조회 결과가 없습니다</td></tr>",
+                row("가통장", "0.10", "2.00")
+        ), BANKS);
+
+        assertThat(products).extracting(KfbRawProduct::productName).containsExactly("가통장");
+    }
+
+    private static final List<KfbBank> BANKS = List.of(new KfbBank("0015130", "카카오뱅크"));
+
+    private static String resultTable(String... rows) {
+        return "<table class=\"resultList_ty02\"><tbody>" + String.join("", rows) + "</tbody></table>";
+    }
+
+    private static String row(String productName, String baseRate, String maxRate) {
+        return """
+                <tr><td>카카오뱅크</td><td class="tl"><a href="https://www.kakaobank.com/p">%s</a></td>
+                <td>%s</td><td>%s</td><td>월지급</td><td>보기</td></tr>
+                """.formatted(productName, baseRate, maxRate);
+    }
+
     private static final String ALL_BANKS_RESULT = "free_deposit_search_result_all_banks.html";
 
     private static KfbRawProduct product(List<KfbRawProduct> products, String name) {
