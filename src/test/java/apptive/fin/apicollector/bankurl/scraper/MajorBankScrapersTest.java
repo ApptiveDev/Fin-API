@@ -135,4 +135,12 @@ class MajorBankScrapersTest {
 
         assertThat(result).containsExactly(new ProductCandidate("쏠편한 정기예금", "P123"));
     }
+
+    // sitemap에 없는 상품의 모바일 URL(PR0401S0000F01/PR0301S0100F01?pid=…, mid 없음)은 예금·적금·입출금 모두 모바일 홈으로
+    // 튕긴다. 데스크톱 bridge 링크는 상품코드(pcd)로 상품을 연다(2026-09-27 실측: 정기예금·적금·입출금통장).
+    @Test
+    void shinhanFallsBackToDesktopBridgeUrlForProductMissingFromSitemap() {
+        assertThat(new ShinhanBankScraper().fallbackUrl("110004301"))
+                .isEqualTo("https://bank.shinhan.com/bank_bridge.jsp?cr=020102010110&pcd=110004301");
+    }
 }
