@@ -48,8 +48,9 @@ public class ImBankScraper extends AbstractBankProductScraper {
 
     String requestProducts(BrowserContext context, String productName) {
         Map<String, Object> payload = new LinkedHashMap<>();
+        // MALL_INQ_DVCD("1")는 결과를 예적금 상품몰로 제한해 입출금 상품(iM스마트통장, 비상금박스)이 빠진다.
+        // 빼도 예적금 상품은 같은 결과가 나온다(2026-09-27 API 직접 호출로 확인).
         payload.put("HMPG_PD_CLACD", "02");
-        payload.put("MALL_INQ_DVCD", "1");
         payload.put("DPO_BPD_JN_PURP_CN", "99");
         payload.put("DPO_BPD_TRGET_AGE_CN", "99");
         payload.put("DPO_JN_AMT_DVCD", "99");
