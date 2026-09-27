@@ -41,6 +41,12 @@ public final class ProductNameSimilarity {
                 + 0.20 * bigramJaccard(normalizedLeft, normalizedRight);
     }
 
+    // 공백·기호만 무시하고 괄호 안 내용까지 같은지 본다. score()는 괄호 안을 지워서 이런 이름들이 동점이 된다.
+    public boolean sameName(String left, String right) {
+        String compactLeft = compact(left);
+        return !compactLeft.isEmpty() && compactLeft.equals(compact(right));
+    }
+
     public boolean hasConflictingVariant(String left, String right) {
         String compactLeft = compact(left);
         String compactRight = compact(right);

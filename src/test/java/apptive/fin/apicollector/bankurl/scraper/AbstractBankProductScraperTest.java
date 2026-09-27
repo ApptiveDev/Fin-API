@@ -148,6 +148,33 @@ class AbstractBankProductScraperTest {
         ));
     }
 
+    // 유사도는 괄호 안을 지우고 비교해서 "씨드모아(소액우대) 통장"과 "씨드모아(고액우대) 통장"이 동점이 된다.
+    // 괄호까지 같은 후보가 있으면 그것을 골라야 한다(전북은행 씨드모아 3종이 모두 고액우대 링크로 붙던 문제).
+    @Test
+    void prefersCandidateWithExactlySameNameOverTiedSimilarity() {
+        TestScraper scraper = new TestScraper();
+        List<ProductCandidate> candidates = List.of(
+                new ProductCandidate("씨드모아(고액우대) 통장", "https://bank.example/high"),
+                new ProductCandidate("씨드모아(카드우대) 통장", "https://bank.example/card"),
+                new ProductCandidate("씨드모아(소액우대) 통장", "https://bank.example/small")
+        );
+
+        assertThat(scraper.select(candidates, "씨드모아(소액우대) 통장").url()).isEqualTo("https://bank.example/small");
+        assertThat(scraper.select(candidates, "씨드모아(카드우대)통장").url()).isEqualTo("https://bank.example/card");
+    }
+
+    // 괄호까지 같은 후보가 없으면 지금처럼 유사도로 고른다(은행 사이트 표기가 괄호 접미사만 다른 경우).
+    @Test
+    void fallsBackToSimilarityWhenNoCandidateHasSameName() {
+        TestScraper scraper = new TestScraper();
+        List<ProductCandidate> candidates = List.of(
+                new ProductCandidate("JB 다이렉트예금(만기일시지급식)", "https://bank.example/deposit"),
+                new ProductCandidate("JB언택트통장(저축)", "https://bank.example/untact")
+        );
+
+        assertThat(scraper.select(candidates, "JB 언택트 통장").url()).isEqualTo("https://bank.example/untact");
+    }
+
     private static class TestScraper extends AbstractBankProductScraper {
 
         @Override

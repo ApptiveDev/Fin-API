@@ -150,7 +150,14 @@ public abstract class AbstractBankProductScraper implements BankProductScraper {
         return cleanText(block.text());
     }
 
+    // 유사도는 괄호 안을 지우고 비교해 "씨드모아(소액우대)"와 "씨드모아(고액우대)"가 동점이 된다.
+    // 괄호까지 같은 후보가 있으면 그것을 먼저 고르고, 없을 때만 유사도로 고른다.
     protected ProductCandidate select(List<ProductCandidate> candidates, String productName) {
+        for (ProductCandidate candidate : candidates) {
+            if (similarity.sameName(candidate.name(), productName)) {
+                return candidate;
+            }
+        }
         return candidates.stream()
                 .max((left, right) -> Double.compare(
                         similarity.score(left.name(), productName),
