@@ -24,6 +24,31 @@ class RegionalBankScrapersTest {
         ));
     }
 
+    // PC 상품 카테고리 페이지(실제 구조): 이름은 a.go-detail의 dt, 상품코드는 같은 항목의 관심상품 버튼 onclick에 있다.
+    @Test
+    void suhyupExtractsCategoryProductWithCodeFromInterestButton() {
+        var result = new SuhyupBankScraper().extractCategoryProducts(Jsoup.parse("""
+                <ul><li>
+                  <div class="pro_list_area">
+                    <div class="product_txt">
+                      <a href="#557" class="go-detail" title="Sh내가만든통장 상세보기">
+                        <dl><dt>Sh내가만든통장</dt><dd> 지정금액에 따른 고금리제공 </dd></dl>
+                      </a>
+                      <ul class="sub_icon_case"><li>단기자금</li></ul>
+                    </div>
+                    <div class="product_btn">
+                      <a href="#none" class="btn_etc_star" onclick="interest('01', 'FPD00010', 'D00148');">관심상품등록</a>
+                    </div>
+                  </div>
+                </li></ul>
+                """), "https://www.suhyup-bank.com/ib20/mnu/FPD00010");
+
+        assertThat(result).containsExactly(new ProductCandidate(
+                "Sh내가만든통장",
+                "https://www.suhyup-bank.com/ib20/mnu/FPD00118/_menuId/FPD00124/_productCode/D00148"
+        ));
+    }
+
     @Test
     void kyongnamBuildsDetailUrlFromGoDetailCall() {
         var result = new KyongnamBankScraper().extractBankProducts(Jsoup.parse("""
