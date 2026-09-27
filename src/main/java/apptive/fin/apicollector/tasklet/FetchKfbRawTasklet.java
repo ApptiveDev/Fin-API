@@ -31,6 +31,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FetchKfbRawTasklet implements Tasklet {
 
+    // DeactivateMissingProductTasklet이 이번 실행의 KFB 수집 실패 여부를 이 이름으로 확인한다.
+    public static final String STEP_NAME = "fetchKfbRawStep";
+
     private final KfbClient kfbClient;
     private final KfbParkingFilter parkingFilter;
     private final RawProductSaveService rawProductSaveService;
