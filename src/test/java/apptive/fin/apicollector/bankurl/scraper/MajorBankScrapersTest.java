@@ -34,6 +34,23 @@ class MajorBankScrapersTest {
         ));
     }
 
+    // KB모임금고처럼 이름에 예금·적금·통장이 없는 입출금 상품도 검색 결과 행이면 후보로 받는다.
+    @Test
+    void kbKeepsSearchResultWithoutDepositWord() {
+        var result = new KbBankScraper().extractSearchResults(Jsoup.parse("""
+                <div class="area1">
+                  <a href="#none" class="title"
+                     onclick="productDtlSear('DP01001593','01','입출금자유')">KB모임금고</a>
+                </div>
+                """), "https://obank.kbstar.com/quics?page=C016528");
+
+        assertThat(result).containsExactly(new ProductCandidate(
+                "KB모임금고",
+                "https://obank.kbstar.com/quics?page=C016613"
+                        + "&cc=b061496:b061645&QSL=F&prcode=DP01001593"
+        ));
+    }
+
     @Test
     void hanaExtractsOnlyProductInfoBlocks() {
         var result = new HanaBankScraper().extractSearchResults(Jsoup.parse("""

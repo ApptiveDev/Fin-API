@@ -20,6 +20,22 @@ class InternetBankScrapersTest {
         ));
     }
 
+    // 파킹통장(세이프박스·저금통)은 이름에 예금·적금·통장이 없다. 링크 안 문구가 붙어 있으면 <strong> 상품명을 쓴다(실제 카카오뱅크 목록 구조).
+    @Test
+    void kakaoExtractsBoxProductWithoutDepositWordUsingStrongName() {
+        var result = new KakaoBankScraper().extractProductLinks(Jsoup.parse("""
+                <a href="/products/safeboxes"><span class="copy">계좌 속 여유자금을 안전하게<br><strong>세이프박스</strong></span></a>
+                <a href="/products/coinbox"><span class="copy">잔돈 모으기<br><strong>저금통</strong></span></a>
+                <a href="/products/fx/safeboxes"><span class="copy">달러도 안전하게<br><strong>달러 세이프박스</strong></span></a>
+                """), "https://www.kakaobank.com/products/withdrawal");
+
+        assertThat(result).containsExactly(
+                new ProductCandidate("세이프박스", "https://www.kakaobank.com/products/safeboxes"),
+                new ProductCandidate("저금통", "https://www.kakaobank.com/products/coinbox"),
+                new ProductCandidate("달러 세이프박스", "https://www.kakaobank.com/products/fx/safeboxes")
+        );
+    }
+
     @Test
     void kbankUsesStructuredNameWhenLinkTextIsGeneric() {
         var result = new KbankScraper(new ObjectMapper()).extractProductLinks(Jsoup.parse("""
@@ -152,6 +168,17 @@ class InternetBankScrapersTest {
 
         assertThat(result).containsExactly(new ProductCandidate(
                 "토스뱅크 정기예금", "https://www.tossbank.com/product-service/savings/time-deposit"
+        ));
+    }
+
+    @Test
+    void tossExtractsMoneyboxWithoutDepositWord() {
+        var result = new TossBankScraper().extractProductLinks(Jsoup.parse("""
+                <a href="/product-service/savings/teens-interest-moneybox">이자 받는 저금통</a>
+                """), "https://www.tossbank.com/");
+
+        assertThat(result).containsExactly(new ProductCandidate(
+                "이자 받는 저금통", "https://www.tossbank.com/product-service/savings/teens-interest-moneybox"
         ));
     }
 

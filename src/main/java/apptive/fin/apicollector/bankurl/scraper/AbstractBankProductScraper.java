@@ -321,14 +321,23 @@ public abstract class AbstractBankProductScraper implements BankProductScraper {
         return value == null ? "" : value.replaceAll("\\s+", " ").trim();
     }
 
+    // 페이지 아무 링크에서나 후보를 모을 때 쓴다. 상품 단어(예금·적금·통장)가 있어야 메뉴·배너 문구를 거를 수 있다.
     protected boolean looksLikeProductName(String value) {
+        if (!isCandidateName(value)) {
+            return false;
+        }
+        String lowered = cleanText(value).toLowerCase(Locale.ROOT);
+        return PRODUCT_WORDS.stream().anyMatch(lowered::contains);
+    }
+
+    // 상품 링크·검색 결과 행처럼 구조로 이미 범위를 좁힌 곳에서 쓴다. 세이프박스·저금통·모임금고 같은
+    // 입출금 상품은 이름에 상품 단어가 없어서, 여기서는 상품 단어를 요구하지 않는다.
+    protected boolean isCandidateName(String value) {
         String text = cleanText(value);
         if (text.isEmpty() || text.length() > 90 || isGenericProductName(text)) {
             return false;
         }
-        String lowered = text.toLowerCase(Locale.ROOT);
-        boolean hasProductWord = PRODUCT_WORDS.stream().anyMatch(lowered::contains);
-        return hasProductWord && NON_PRODUCT_WORDS.stream().noneMatch(text::contains);
+        return NON_PRODUCT_WORDS.stream().noneMatch(text::contains);
     }
 
     protected String urlFromAnchor(Element anchor, String currentUrl) {
