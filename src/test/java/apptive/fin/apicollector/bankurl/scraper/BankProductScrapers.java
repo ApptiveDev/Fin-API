@@ -22,7 +22,7 @@ public final class BankProductScrapers {
                 new KakaoBankScraper(),
                 new KbankScraper(objectMapper),
                 new KbBankScraper(),
-                new KdbBankScraper(),
+                new KdbBankScraper(objectMapper),
                 new KwangjuBankScraper(objectMapper),
                 new KyongnamBankScraper(),
                 new NhBankScraper(),

@@ -2,6 +2,7 @@ package apptive.fin.apicollector.bankurl.scraper;
 
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -106,17 +107,30 @@ class MajorBankScrapersTest {
                 .endsWith("i_trns_biz_kncd=IBK%ED%9A%8C%EC%A0%84%EC%A0%95%EA%B8%B0%20%EC%98%88%EA%B8%88");
     }
 
+    // 예금 목록 API(BMDEWP01R00.jct) 응답 구조(2026-09-27 실측). 예금·적금·입출금이 한 목록으로 온다.
     @Test
-    void kdbExtractsKnownProductCode() {
-        var result = new KdbBankScraper().extractProducts(
-                Jsoup.parse("const PROD_C='100237000101'; const PROD_NM='KDB 정기예금';"),
-                "https://banking.kdb.co.kr"
-        );
+    void kdbBuildsDetailUrlsFromProductListApi() {
+        var result = new KdbBankScraper(new ObjectMapper()).extractProductsFromApi("""
+                {
+                  "GRID_LIST": [
+                    {"WGD_NM": "KDB 정기예금", "PRD_C": "100237000101", "CTG_N1_NM": "목돈굴리기"},
+                    {"WGD_NM": "KDB Hi 입출금통장", "PRD_C": "100014000101", "CTG_N1_NM": "입출금자유상품"},
+                    {"WGD_NM": "", "PRD_C": "100000000000"}
+                  ],
+                  "HEADER_STD_WEB": {"TOT_PAG_ROW_CNT": 3}
+                }
+                """);
 
-        assertThat(result).contains(new ProductCandidate(
-                "KDB 정기예금",
-                "https://banking.kdb.co.kr/bp/BMDEWP01N10.act?PRD_C=100237000101#prd=100237000101"
-        ));
+        assertThat(result).containsExactly(
+                new ProductCandidate(
+                        "KDB 정기예금",
+                        "https://banking.kdb.co.kr/bp/BMDEWP01N10.act?PRD_C=100237000101#prd=100237000101"
+                ),
+                new ProductCandidate(
+                        "KDB Hi 입출금통장",
+                        "https://banking.kdb.co.kr/bp/BMDEWP01N10.act?PRD_C=100014000101#prd=100014000101"
+                )
+        );
     }
 
     @Test
