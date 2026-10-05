@@ -49,7 +49,9 @@ class GeminiResponseParserTest {
                                 .put("rate", 0.3)
                                 .put("description", "카드 실적 우대")
                                 .put("minAge", 19)
-                                .put("maxAge", 34))));
+                                .put("maxAge", 34)))
+                .putNull("maxRateApplicableMinAmount")
+                .put("maxRateApplicableMaxAmount", 10000000));
 
         assertThat(result.summaryContent()).isEqualTo("요약");
         assertThat(result.keywords()).containsExactly("BANK_CARD_USAGE");
@@ -58,6 +60,8 @@ class GeminiResponseParserTest {
         assertThat(result.minAge()).isEqualTo(19);
         assertThat(result.requiredKeywords()).hasSize(1);
         assertThat(result.preferentialRates()).hasSize(1);
+        assertThat(result.maxRateApplicableMinAmount()).isNull();
+        assertThat(result.maxRateApplicableMaxAmount()).isEqualTo(10_000_000L);
     }
 
     @Test

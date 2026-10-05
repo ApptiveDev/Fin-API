@@ -12,7 +12,7 @@ public record LlmProductEnrichment(
         List<String> keywords,
         Long minMonthlyLimit,
         Long maxMonthlyLimit,
-        // 예금(DEPOSIT) 전용: 원문에 명시된 최소 가입금액(최소가입한도/최소예치금액). 적금·미명시면 null.
+        // 예금(DEPOSIT)·파킹(PARKING): 원문에 명시된 최소 가입금액(최소가입한도/최소예치금액). 적금·미명시면 null.
         Long minDepositAmount,
         Integer minAge,
         Integer maxAge,
@@ -29,7 +29,10 @@ public record LlmProductEnrichment(
         Boolean allowsMilitaryAgeExtension,
         Integer militaryMaxAge,
         List<RequiredKeywordDraft> requiredKeywords,
-        List<PreferentialRateDraft> preferentialRates
+        List<PreferentialRateDraft> preferentialRates,
+        // KFB(파킹) 전용: 최고금리가 적용되는 잔액 범위(원). 하한은 초과, 상한은 이하. FSS 스키마에는 없어 항상 null.
+        Long maxRateApplicableMinAmount,
+        Long maxRateApplicableMaxAmount
 ) {
     public LlmProductEnrichment {
         keywords = keywords == null ? List.of() : List.copyOf(keywords);

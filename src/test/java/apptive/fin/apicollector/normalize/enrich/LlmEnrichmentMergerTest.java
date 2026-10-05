@@ -69,6 +69,43 @@ class LlmEnrichmentMergerTest {
         assertThat(result.properties().getFirst().preferentialRates()).hasSize(1);
     }
 
+    @Test
+    void parking_fillsMinDepositAmountAndMaxRateApplicableRangeFromLlm() {
+        ProductDraft result = merger.merge(kfbDraft("1천만원 이하 1.50%, 1천만원 초과~1억원 이하 2.00%"),
+                enrichmentWithRange(10_000L, 10_000_000L, 100_000_000L));
+
+        ProductPropertyDraft property = result.properties().getFirst();
+        assertThat(property.minDepositAmount()).isEqualTo(10_000L);
+        assertThat(property.maxRateApplicableMinAmount()).isEqualTo(10_000_000L);
+        assertThat(property.maxRateApplicableMaxAmount()).isEqualTo(100_000_000L);
+    }
+
+    @Test
+    void parking_keepsRuleBasedRangeAsPairOverLlmRange() {
+        // 공시 최고한도에서 정한 상한이 있으면 LLM 하한을 섞지 않는다. 섞으면 (1천만, 5백만)처럼 뒤집힌 범위가 된다.
+        ProductDraft draft = kfbDraft("잔액 중 5백만원 이하의 금액에 대해 우대금리 제공");
+        draft = draft.toBuilder()
+                .properties(List.of(draft.properties().getFirst().toBuilder()
+                        .maxRateApplicableMaxAmount(5_000_000L)
+                        .build()))
+                .build();
+
+        ProductDraft result = merger.merge(draft, enrichmentWithRange(null, 10_000_000L, 100_000_000L));
+
+        ProductPropertyDraft property = result.properties().getFirst();
+        assertThat(property.maxRateApplicableMinAmount()).isNull();
+        assertThat(property.maxRateApplicableMaxAmount()).isEqualTo(5_000_000L);
+    }
+
+    @Test
+    void nonParking_ignoresLlmMaxRateApplicableRange() {
+        ProductDraft result = merger.merge(draft(ProductType.DEPOSIT, null), enrichmentWithRange(null, 10_000_000L, 100_000_000L));
+
+        ProductPropertyDraft property = result.properties().getFirst();
+        assertThat(property.maxRateApplicableMinAmount()).isNull();
+        assertThat(property.maxRateApplicableMaxAmount()).isNull();
+    }
+
     private ProductDraft kfbDraft(String content) {
         return ProductDraft.builder()
                 .rawId(1L)
@@ -97,7 +134,7 @@ class LlmEnrichmentMergerTest {
     private LlmProductEnrichment enrichmentWithRates(PreferentialRateDraft... rates) {
         return new LlmProductEnrichment(
                 null, List.of(), null, null, null, null, null, null, null,
-                false, false, null, null, null, null, null, false, false, null, List.of(), List.of(rates));
+                false, false, null, null, null, null, null, false, false, null, List.of(), List.of(rates), null, null);
     }
 
     private ProductDraft draft(ProductType type, Long existingMinDepositAmount) {
@@ -118,9 +155,15 @@ class LlmEnrichmentMergerTest {
                 .build();
     }
 
+    private LlmProductEnrichment enrichmentWithRange(Long minDepositAmount, Long rangeMin, Long rangeMax) {
+        return new LlmProductEnrichment(
+                null, List.of(), null, null, minDepositAmount, null, null, null, null,
+                false, false, null, null, null, null, null, false, false, null, List.of(), List.of(), rangeMin, rangeMax);
+    }
+
     private LlmProductEnrichment enrichmentWithMinDeposit(Long minDepositAmount) {
         return new LlmProductEnrichment(
                 null, List.of(), null, null, minDepositAmount, null, null, null, null,
-                false, false, null, null, null, null, null, false, false, null, List.of(), List.of());
+                false, false, null, null, null, null, null, false, false, null, List.of(), List.of(), null, null);
     }
 }

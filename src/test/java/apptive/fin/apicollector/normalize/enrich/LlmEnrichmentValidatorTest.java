@@ -26,7 +26,7 @@ class LlmEnrichmentValidatorTest {
     ) {
         return new LlmProductEnrichment(
                 null, List.of(), null, null, null, minAge, maxAge, null, null, false, false,
-                null, null, null, null, null, false, false, null, requiredKeywords, preferentialRates);
+                null, null, null, null, null, false, false, null, requiredKeywords, preferentialRates, null, null);
     }
 
     private PreferentialRateDraft preferential(KeywordValueEnum keyword, String rate, String description) {
@@ -46,6 +46,16 @@ class LlmEnrichmentValidatorTest {
     @Test
     void validate_throwsWhenMaxAgeBelowMinAge() {
         assertThatThrownBy(() -> validator.validate(enrichment(30, 20, List.of(), List.of())))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validate_throwsWhenMaxRateApplicableRangeIsNotIncreasing() {
+        LlmProductEnrichment reversed = new LlmProductEnrichment(
+                null, List.of(), null, null, null, null, null, null, null, false, false,
+                null, null, null, null, null, false, false, null, List.of(), List.of(), 100_000_000L, 10_000_000L);
+
+        assertThatThrownBy(() -> validator.validate(reversed))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

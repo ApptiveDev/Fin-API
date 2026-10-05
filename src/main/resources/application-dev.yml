@@ -63,12 +63,13 @@ collector:
     provider: GEMINI
     model: ${GEMINI_MODEL:gemini-2.5-flash-lite}
     # 소스별 버전. 하나로 같이 쓰면 KFB 프롬프트만 바꿔도 FSS 캐시까지 무효가 되어 전체를 다시 호출한다.
+    # KFB 8 -> 9, 16 -> 17: 최고금리 적용 범위(maxRateApplicable*)와 파킹 최소 가입금액(minDepositAmount) 추출을 추가했다.
     prompt-versions:
       FSS: 8
-      KFB: 8
+      KFB: 9
     schema-versions:
       FSS: 16
-      KFB: 16
+      KFB: 17
     chunk-size: ${LLM_CHUNK_SIZE:10}
     max-concurrency: ${LLM_MAX_CONCURRENCY:3}
     # temperature=0은 특정 입력에서 모델이 출력을 최대치까지 폭주 생성하는 결정적 루프에 빠졌다.

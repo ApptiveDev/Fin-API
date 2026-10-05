@@ -122,12 +122,26 @@ public class LlmEnrichmentMerger {
         // 가입금액이나 파킹통장의 예치한도가 잘못 채워지지 않도록 null로 강제한다(LLM 준수 여부와 무관하게 보장).
         boolean isSaving = type == ProductType.SAVING;
         boolean isDeposit = type == ProductType.DEPOSIT;
+        boolean isParking = type == ProductType.PARKING;
+        // 최고금리 적용 범위는 하한·상한을 한 쌍으로 다룬다. 공시 최고한도에서 정한 값(KfbLimitClassifier)이
+        // 있으면 그 쌍을 쓰고, 없을 때만 LLM 쌍을 쓴다. 필드별로 섞으면 하한이 상한보다 큰 범위가 생길 수 있다.
+        boolean hasRuleBasedRange = property.maxRateApplicableMinAmount() != null
+                || property.maxRateApplicableMaxAmount() != null;
+        boolean useLlmRange = isParking && !hasRuleBasedRange;
         return property.toBuilder()
                 .minMonthlyLimit(isSaving ? firstNonNull(property.minMonthlyLimit(), enrichment.minMonthlyLimit()) : null)
                 .maxMonthlyLimit(isSaving ? firstNonNull(property.maxMonthlyLimit(), enrichment.maxMonthlyLimit()) : null)
-                // minDepositAmount는 예금 전용 컬럼이다. 예금이면 결정적 값(수동입력) 우선, 없으면 LLM 값으로 채우고,
-                // 예금이 아니면 LLM이 채웠더라도 null로 강제한다(월 납입 가드와 대칭).
-                .minDepositAmount(isDeposit ? firstNonNull(property.minDepositAmount(), enrichment.minDepositAmount()) : null)
+                // minDepositAmount는 예금·파킹 컬럼이다. 해당 유형이면 결정적 값(수동입력) 우선, 없으면 LLM 값으로 채우고,
+                // 그 밖의 유형이면 LLM이 채웠더라도 null로 강제한다(월 납입 가드와 대칭).
+                .minDepositAmount(isDeposit || isParking
+                        ? firstNonNull(property.minDepositAmount(), enrichment.minDepositAmount())
+                        : null)
+                .maxRateApplicableMinAmount(useLlmRange
+                        ? enrichment.maxRateApplicableMinAmount()
+                        : property.maxRateApplicableMinAmount())
+                .maxRateApplicableMaxAmount(useLlmRange
+                        ? enrichment.maxRateApplicableMaxAmount()
+                        : property.maxRateApplicableMaxAmount())
                 .minAge(firstNonNull(property.minAge(), enrichment.minAge()))
                 .maxAge(firstNonNull(property.maxAge(), enrichment.maxAge()))
                 .earnMaxAmt(firstNonNull(property.earnMaxAmt(), incomeMentioned ? enrichment.earnMaxAmt() : null))

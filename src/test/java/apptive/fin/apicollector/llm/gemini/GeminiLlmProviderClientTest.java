@@ -72,6 +72,7 @@ class GeminiLlmProviderClientTest {
                 .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
         LlmProductEnrichment result = client.enrich(new LlmProductEnrichmentRequest(
+                Source.FSS,
                 "gemini-test",
                 "한국어 가입 조건을 요약해줘",
                 1
@@ -108,6 +109,7 @@ class GeminiLlmProviderClientTest {
                 .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
         LlmProductEnrichment result = client.enrich(new LlmProductEnrichmentRequest(
+                Source.FSS,
                 "gemini-test",
                 "가입 조건을 요약해줘",
                 1
@@ -145,7 +147,7 @@ class GeminiLlmProviderClientTest {
     private LlmProductEnrichment emptyEnrichment() {
         return new LlmProductEnrichment(
                 null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null, null
         );
     }
 }

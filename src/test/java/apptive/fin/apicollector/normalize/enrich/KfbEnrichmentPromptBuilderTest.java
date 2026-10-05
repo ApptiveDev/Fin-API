@@ -35,14 +35,23 @@ class KfbEnrichmentPromptBuilderTest {
         assertThat(prompt)
                 .contains("잔액 구간별 적용금리는 우대금리가 아니다")
                 .contains("예치기간별 적용금리")
-                .contains("minMonthlyLimit, maxMonthlyLimit, minDepositAmount는 항상 null");
+                .contains("minMonthlyLimit, maxMonthlyLimit는 항상 null");
+    }
+
+    @Test
+    void build_describesMaxRateApplicableRangeBoundaries() {
+        String prompt = promptBuilder.build(raw("{}"), draft());
+
+        assertThat(prompt)
+                .contains("하한은 \"이 금액 초과\", 상한은 \"이 금액 이하\"로 본다")
+                .contains("금리가 가장 높은 구간의 경계");
     }
 
     @Test
     void build_skeletonContainsEverySchemaProperty() {
         String prompt = promptBuilder.build(raw("{}"), draft());
 
-        new GeminiEnrichmentSchema(new ObjectMapper()).build().path("properties").propertyNames()
+        new GeminiEnrichmentSchema(new ObjectMapper()).build(Source.KFB).path("properties").propertyNames()
                 .forEach(name -> assertThat(prompt).contains("\"" + name + "\":"));
     }
 

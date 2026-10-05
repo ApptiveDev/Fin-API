@@ -87,7 +87,7 @@ class LlmProductDraftEnricherTest {
                         .keywordCode(KeywordValueEnum.BANK_CARD_USAGE)
                         .rate(new BigDecimal("0.5"))
                         .description("카드 사용 우대")
-                        .build())
+                        .build()), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -157,7 +157,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -223,7 +223,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -270,7 +270,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -318,7 +318,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -366,7 +366,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -414,7 +414,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -461,7 +461,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -508,7 +508,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -556,7 +556,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -607,7 +607,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -672,7 +672,7 @@ class LlmProductDraftEnricherTest {
                                 .confidence(ExtractionConfidence.HIGH)
                                 .build()
                 ),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -728,7 +728,7 @@ class LlmProductDraftEnricherTest {
                                 .confidence(ExtractionConfidence.HIGH)
                                 .build()
                 ),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -780,7 +780,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -896,7 +896,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
 
         LlmEnrichmentCache cache = LlmEnrichmentCache.create(
@@ -972,7 +972,7 @@ class LlmProductDraftEnricherTest {
                 false,
                 null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         );
 
         LlmEnrichmentCache cache = LlmEnrichmentCache.create(
@@ -1023,7 +1023,7 @@ class LlmProductDraftEnricherTest {
                                 .rate(new BigDecimal("0.10"))
                                 .description("마케팅동의 및 모바일메시지 수신동의")
                                 .build()
-                )
+                ), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -1077,7 +1077,7 @@ class LlmProductDraftEnricherTest {
                 null, null, null, null, null,
                 false, false, null,
                 List.of(),
-                List.of()
+                List.of(), null, null
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -1129,7 +1129,7 @@ class LlmProductDraftEnricherTest {
     @Test
     void enrichesKfbParkingDraftWithKfbPromptAndPreservesDisclosureFacts() {
         // KFB는 규칙 추출 우대금리가 없어 LLM 결과가 그대로 쓰인다. 공시에서 온 금리·한도·링크는 LLM이 바꾸지 못하고,
-        // 파킹통장에는 월 납입·최소 가입금액 개념이 없어 LLM이 채워도 null이어야 한다.
+        // 파킹통장에는 월 납입 개념이 없어 LLM이 채워도 null이어야 한다. 최소 가입금액과 최고금리 적용 범위는 LLM 값을 쓴다.
         LlmProviderClient providerClient = mock(LlmProviderClient.class);
         LlmEnrichmentCacheRepository cacheRepository = mock(LlmEnrichmentCacheRepository.class);
         when(providerClient.supports("GEMINI")).thenReturn(true);
@@ -1154,7 +1154,7 @@ class LlmProductDraftEnricherTest {
                                 .rate(new BigDecimal("0.90"))
                                 .description("입출금통장 첫거래(신규시)")
                                 .build()
-                )
+                ), null, 10_000_000L
         ));
         when(cacheRepository.findBySourceAndExternalIdAndContentHashAndProviderAndModelAndPromptVersionAndSchemaVersion(
                 any(), any(), any(), any(), any(), anyInt(), anyInt()
@@ -1183,11 +1183,12 @@ class LlmProductDraftEnricherTest {
         assertThat(property.minAge()).isEqualTo(14);
         assertThat(property.minMonthlyLimit()).isNull();
         assertThat(property.maxMonthlyLimit()).isNull();
-        assertThat(property.minDepositAmount()).isNull();
+        assertThat(property.minDepositAmount()).isEqualTo(1_000L);
         assertThat(property.baseRate()).isEqualByComparingTo("1.50");
         assertThat(property.maxRate()).isEqualByComparingTo("2.50");
         assertThat(property.maxDepositAmount()).isEqualTo(100_000_000L);
-        assertThat(property.maxRateApplicableMaxAmount()).isNull();
+        assertThat(property.maxRateApplicableMinAmount()).isNull();
+        assertThat(property.maxRateApplicableMaxAmount()).isEqualTo(10_000_000L);
         assertThat(property.applyUrl()).isEqualTo("https://bank.example.com/parking");
         verify(cacheRepository).save(any(LlmEnrichmentCache.class));
     }

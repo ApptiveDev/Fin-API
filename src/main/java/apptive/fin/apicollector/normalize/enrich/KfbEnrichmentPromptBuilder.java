@@ -32,7 +32,9 @@ public class KfbEnrichmentPromptBuilder implements EnrichmentPromptBuilder {
                 - 원문에 명시되지 않은 값은 null 또는 false로 둔다.
                 - 금리, 기간, 은행명, 상품명, 상품코드, 신청 URL은 생성하지 않는다.
                 - productType은 PARKING(입출금이 자유로운 통장)이다. 월 납입·만기 개념이 없다.
-                - minMonthlyLimit, maxMonthlyLimit, minDepositAmount는 항상 null로 둔다. 최고한도·예치한도·우대금리 적용 한도도 여기에 넣지 않는다.
+                - minMonthlyLimit, maxMonthlyLimit는 항상 null로 둔다.
+                - minDepositAmount는 가입·예치할 수 있는 최소 금액이 원문에 명시된 경우만 채운다(예: "가입금액: 1만원 이상" → 10000). 없으면 null.
+                  최고한도·예치한도·우대금리 적용 한도·잔액 구간 경계는 minDepositAmount가 아니다.
                 - 정부기여금(govContributionRate, govContributionType, govMatchingRatio, govMonthlyFixedContribution, govContributionPeriodMonths)은 항상 null로 둔다.
                 - allowsMilitaryAgeExtension, excludeFromRateComparison, requiresHomeless, requiresHouseholder는 원문에 명시되지 않았으면 false로 둔다.
                 - keywords에는 기간 키워드(TERM_*)를 넣지 않는다.
@@ -55,7 +57,8 @@ public class KfbEnrichmentPromptBuilder implements EnrichmentPromptBuilder {
                 - "우대금리 최고 연 2.0%%", "최대 1.00%%"처럼 전체 우대금리의 합계/상한만 적은 안내 문구 아래에 개별 조건과 %%가 따로 나열돼 있으면, 안내 문구는 무시하고 개별 조건들만 각각 넣는다. 개별 조건 없이 합계/상한만 있으면 빈 배열로 둔다.
                 - 하나의 조건 안에서 실적·금액 기준에 따라 요율이 여러 구간으로 나뉘면(예: 카드실적 50만원~100만원미만 연0.2%%, 100만원이상 연0.4%%), 구간마다 별도 항목으로 나누고 description에 기준을 적는다.
                   반드시 원문에서 그 구간 바로 옆에 적힌 숫자를 그대로 옮기며, 모든 구간에 같은 rate를 복사하지 않는다.
-                - 우대금리가 잔액 일부(예: "2백만원 이하의 금액에 대해")에만 적용된다는 한도는 어느 필드에도 넣지 않고 description에만 적는다.
+                - 우대금리가 잔액 일부(예: "2백만원 이하의 금액에 대해")에만 적용된다는 한도는 preferentialRates의 description에 적고,
+                  아래 최고금리 적용 범위 규칙에 따라 maxRateApplicableMaxAmount에도 넣는다.
                 - keywordCode는 원문의 우대조건 의미와 정확히 일치할 때만 선택한다. 비슷해 보인다는 이유로 끼워맞추지 않는다.
                 - 허용되는 preferentialRates 매핑:
                   * BANK_CARD_USAGE: 카드 보유/사용/결제실적/전월결제 조건
@@ -72,6 +75,17 @@ public class KfbEnrichmentPromptBuilder implements EnrichmentPromptBuilder {
                 - 응답 전에 preferentialRates의 각 항목(특히 BANK_ETC)을 다시 확인하고, 아래 중 하나라도 해당하면 뺀다:
                   (1) 조건이 금액 구간·지정금액·예치기간·잔액 크기뿐이다. (2) 조건이 이 상품 가입 또는 이벤트 기간 가입뿐이다.
                   (3) rate가 원문에서 그 조건 옆에 %%로 적혀 있지 않다.
+
+                최고금리 적용 범위(maxRateApplicableMinAmount, maxRateApplicableMaxAmount) 규칙:
+                - 최고금리(maxRate)가 적용되는 잔액 범위를 원 단위 정수로 넣는다. 하한은 "이 금액 초과", 상한은 "이 금액 이하"로 본다.
+                - 우대금리가 일정 잔액까지만 적용되는 상품(예: "5천만원 이하 금액에 대해 우대금리 제공"): 하한 null, 상한 50000000.
+                - 잔액 구간별 금리가 있는 상품은 금리가 가장 높은 구간의 경계를 넣는다.
+                  * 첫 구간이 가장 높으면(예: "1천만원 이하 2.35%%, 1천만원 초과 1.95%%"): 하한 null, 상한 10000000.
+                  * 중간 구간이 가장 높으면(예: "1천만원 이하 1.50%%, 1천만원 초과~1억원 이하 2.00%%, 1억원 초과 0.10%%"): 하한 10000000, 상한 100000000.
+                  * 마지막 구간("○원 초과")이 가장 높으면: 하한 그 금액, 상한 null.
+                - "1억원 미만 / 1억원 이상"처럼 경계를 반대로 적은 상품도 같은 금액을 경계로 옮긴다(예: "1억원 미만"이 가장 높으면 상한 100000000).
+                - 금리가 하나뿐이거나, 구간이 잔액이 아니라 예치기간·지정금액 배수 등이면 둘 다 null로 둔다.
+                - 원문에 적힌 금액만 쓴다. 최고한도(maxLimit)를 범위로 옮기거나 금액을 추정하지 않는다.
 
                 가입조건 규칙:
                 - minAge, maxAge는 joinTarget에 가입 가능 나이가 명시된 경우만 채운다(예: "만 14세 이상" → minAge=14).
@@ -108,7 +122,9 @@ public class KfbEnrichmentPromptBuilder implements EnrichmentPromptBuilder {
                   "allowsMilitaryAgeExtension": false,
                   "militaryMaxAge": null,
                   "requiredKeywords": [],
-                  "preferentialRates": []
+                  "preferentialRates": [],
+                  "maxRateApplicableMinAmount": null,
+                  "maxRateApplicableMaxAmount": null
                 }
 
                 현재 정규화 결과:

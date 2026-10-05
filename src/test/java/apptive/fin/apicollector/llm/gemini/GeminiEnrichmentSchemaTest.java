@@ -1,5 +1,6 @@
 package apptive.fin.apicollector.llm.gemini;
 
+import apptive.fin.apicollector.Source;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -23,16 +24,26 @@ class GeminiEnrichmentSchemaTest {
 
     @Test
     void build_declaresAllTopLevelKeysAsRequired() {
-        ObjectNode built = schema.build();
+        ObjectNode built = schema.build(Source.FSS);
 
         assertThat(values(built.get("required")))
                 .hasSize(21)
                 .contains("summaryContent", "keywords", "minDepositAmount", "requiredKeywords", "preferentialRates", "militaryMaxAge");
     }
 
+    // 파킹 전용 필드는 KFB 스키마에만 있다. FSS 스키마가 바뀌면 FSS LLM 결과를 모두 다시 받아야 한다.
+    @Test
+    void build_addsMaxRateApplicableRangeOnlyForKfb() {
+        assertThat(values(schema.build(Source.FSS).get("required")))
+                .doesNotContain("maxRateApplicableMinAmount", "maxRateApplicableMaxAmount");
+        assertThat(values(schema.build(Source.KFB).get("required")))
+                .hasSize(23)
+                .contains("maxRateApplicableMinAmount", "maxRateApplicableMaxAmount");
+    }
+
     @Test
     void build_keywordsEnumExcludesTermKeywords() {
-        JsonNode keywordsEnum = schema.build()
+        JsonNode keywordsEnum = schema.build(Source.FSS)
                 .get("properties").get("keywords").get("items").get("enum");
 
         assertThat(values(keywordsEnum)).isNotEmpty().noneMatch(v -> v.startsWith("TERM_"));
@@ -40,7 +51,7 @@ class GeminiEnrichmentSchemaTest {
 
     @Test
     void build_requiredKeywordsEnumContainsOnlyStatus() {
-        JsonNode enumValues = schema.build()
+        JsonNode enumValues = schema.build(Source.FSS)
                 .get("properties").get("requiredKeywords")
                 .get("items").get("properties").get("keywordCode").get("enum");
 
@@ -49,7 +60,7 @@ class GeminiEnrichmentSchemaTest {
 
     @Test
     void build_preferentialRatesEnumContainsOnlyBank() {
-        JsonNode enumValues = schema.build()
+        JsonNode enumValues = schema.build(Source.FSS)
                 .get("properties").get("preferentialRates")
                 .get("items").get("properties").get("keywordCode").get("enum");
 
