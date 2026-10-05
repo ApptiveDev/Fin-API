@@ -40,6 +40,12 @@ public class LlmEnrichmentMerger {
     };
     private static final String[] INCOME_TOKENS = {"소득", "총급여", "연봉"};
     private static final Pattern PERCENT_PATTERN = Pattern.compile("(\\d+(?:\\.\\d+)?)\\s*%");
+    // "50만원", "5천만원", "1억원", "1,000,000원" 같은 금액 표기. 단위가 있으면 "원"은 생략될 수 있다.
+    private static final Pattern AMOUNT_PATTERN =
+            Pattern.compile("(\\d[\\d,]*)\\s*(?:(억|천만|백만|십만|만|천)\\s*원?|원)");
+    private static final Map<String, Long> AMOUNT_UNITS = Map.of(
+            "억", 100_000_000L, "천만", 10_000_000L, "백만", 1_000_000L, "십만", 100_000L, "만", 10_000L, "천", 1_000L
+    );
 
     public ProductDraft merge(ProductDraft draft, LlmProductEnrichment enrichment) {
         List<ProductPropertyDraft> properties = new ArrayList<>();
@@ -48,8 +54,11 @@ public class LlmEnrichmentMerger {
         List<PreferentialRateDraft> enrichmentRates = draft.rawSource() == Source.KFB
                 ? percentGroundedRates(enrichment.preferentialRates(), draft.content())
                 : enrichment.preferentialRates();
+        Set<Long> writtenAmounts = writtenAmounts(draft.content());
         for (ProductPropertyDraft property : draft.properties()) {
-            properties.add(merge(property, enrichment, enrichmentRates, eligibilityText, draft.type(), incomeMentioned));
+            properties.add(merge(
+                    property, enrichment, enrichmentRates, eligibilityText, draft.type(), incomeMentioned, writtenAmounts
+            ));
         }
 
         return draft.toBuilder()
@@ -110,13 +119,45 @@ public class LlmEnrichmentMerger {
         return List.copyOf(result);
     }
 
+    // KFB 실측에서 LLM이 공시의 "50만원"을 500만으로 옮기거나(자릿수 오류), 구간이 없는 단일 금리 상품의
+    // 예치 한도를 최고금리 적용 범위로 넣는 일이 있었다. 아래 중 하나라도 해당하면 LLM 범위를 버린다.
+    // (1) 경계 금액이 공시 본문에 금액으로 적혀 있지 않다. (2) 기본금리와 최고금리가 같다(구간이 없다).
+    // (3) 범위가 예치 한도와 똑같다(상한만 있고 그 값이 maxDepositAmount).
+    private boolean isPlausibleLlmRange(ProductPropertyDraft property, LlmProductEnrichment enrichment, Set<Long> writtenAmounts) {
+        Long min = enrichment.maxRateApplicableMinAmount();
+        Long max = enrichment.maxRateApplicableMaxAmount();
+        if (min == null && max == null) {
+            return true;
+        }
+        if ((min != null && !writtenAmounts.contains(min)) || (max != null && !writtenAmounts.contains(max))) {
+            log.info("Dropping LLM max-rate range not written in disclosure. min={}, max={}", min, max);
+            return false;
+        }
+        if (property.baseRate() != null && property.maxRate() != null && property.baseRate().compareTo(property.maxRate()) == 0) {
+            return false;
+        }
+        return !(min == null && max.equals(property.maxDepositAmount()));
+    }
+
+    private static Set<Long> writtenAmounts(String content) {
+        Set<Long> amounts = new HashSet<>();
+        Matcher matcher = AMOUNT_PATTERN.matcher(content == null ? "" : content);
+        while (matcher.find()) {
+            long number = Long.parseLong(matcher.group(1).replace(",", ""));
+            String unit = matcher.group(2);
+            amounts.add(unit == null ? number : number * AMOUNT_UNITS.get(unit));
+        }
+        return amounts;
+    }
+
     private ProductPropertyDraft merge(
             ProductPropertyDraft property,
             LlmProductEnrichment enrichment,
             List<PreferentialRateDraft> enrichmentRates,
             String eligibilityText,
             ProductType type,
-            boolean incomeMentioned
+            boolean incomeMentioned,
+            Set<Long> writtenAmounts
     ) {
         // 월 납입 개념은 적금(SAVING)에만 있다. min/maxMonthlyLimit은 월 납입액 전용 필드이므로 정기예금의 일시납
         // 가입금액이나 파킹통장의 예치한도가 잘못 채워지지 않도록 null로 강제한다(LLM 준수 여부와 무관하게 보장).
@@ -127,7 +168,7 @@ public class LlmEnrichmentMerger {
         // 있으면 그 쌍을 쓰고, 없을 때만 LLM 쌍을 쓴다. 필드별로 섞으면 하한이 상한보다 큰 범위가 생길 수 있다.
         boolean hasRuleBasedRange = property.maxRateApplicableMinAmount() != null
                 || property.maxRateApplicableMaxAmount() != null;
-        boolean useLlmRange = isParking && !hasRuleBasedRange;
+        boolean useLlmRange = isParking && !hasRuleBasedRange && isPlausibleLlmRange(property, enrichment, writtenAmounts);
         return property.toBuilder()
                 .minMonthlyLimit(isSaving ? firstNonNull(property.minMonthlyLimit(), enrichment.minMonthlyLimit()) : null)
                 .maxMonthlyLimit(isSaving ? firstNonNull(property.maxMonthlyLimit(), enrichment.maxMonthlyLimit()) : null)

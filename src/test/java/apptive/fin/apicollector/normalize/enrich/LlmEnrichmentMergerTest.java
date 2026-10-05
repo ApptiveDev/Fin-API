@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -98,6 +99,38 @@ class LlmEnrichmentMergerTest {
     }
 
     @Test
+    void parking_dropsLlmRangeWhoseAmountIsNotWrittenInDisclosure() {
+        // 공시 "50만원까지"를 500만으로 옮긴 실측 오류. 원문에 적힌 금액이면 받는다.
+        ProductDraft draft = kfbDraft("1인당 1계좌 가입 가능하며, 우대금리는 잔액 50만원까지 제공");
+
+        assertThat(merger.merge(draft, enrichmentWithRange(null, null, 5_000_000L))
+                .properties().getFirst().maxRateApplicableMaxAmount()).isNull();
+        assertThat(merger.merge(draft, enrichmentWithRange(null, null, 500_000L))
+                .properties().getFirst().maxRateApplicableMaxAmount()).isEqualTo(500_000L);
+    }
+
+    @Test
+    void parking_dropsLlmRangeWhenProductHasSingleRate() {
+        ProductDraft draft = kfbDraft("예치 한도 1천만원 초과 시 이자금액은 예치 한도 산정에서 제외", property -> property
+                .baseRate(new BigDecimal("1.00"))
+                .maxRate(new BigDecimal("1.00")));
+
+        assertThat(merger.merge(draft, enrichmentWithRange(null, null, 10_000_000L))
+                .properties().getFirst().maxRateApplicableMaxAmount()).isNull();
+    }
+
+    @Test
+    void parking_dropsLlmRangeEqualToDepositLimit() {
+        ProductDraft draft = kfbDraft("가입금액: 1만원 이상 500만원 이하", property -> property
+                .baseRate(new BigDecimal("1.50"))
+                .maxRate(new BigDecimal("3.90"))
+                .maxDepositAmount(5_000_000L));
+
+        assertThat(merger.merge(draft, enrichmentWithRange(null, null, 5_000_000L))
+                .properties().getFirst().maxRateApplicableMaxAmount()).isNull();
+    }
+
+    @Test
     void nonParking_ignoresLlmMaxRateApplicableRange() {
         ProductDraft result = merger.merge(draft(ProductType.DEPOSIT, null), enrichmentWithRange(null, 10_000_000L, 100_000_000L));
 
@@ -107,6 +140,10 @@ class LlmEnrichmentMergerTest {
     }
 
     private ProductDraft kfbDraft(String content) {
+        return kfbDraft(content, property -> property);
+    }
+
+    private ProductDraft kfbDraft(String content, UnaryOperator<ProductPropertyDraft.ProductPropertyDraftBuilder> customizer) {
         return ProductDraft.builder()
                 .rawId(1L)
                 .rawSource(Source.KFB)
@@ -116,9 +153,9 @@ class LlmEnrichmentMergerTest {
                 .productCode("KFB:PARKING:001:파킹통장")
                 .productName("파킹통장")
                 .content(content)
-                .properties(List.of(ProductPropertyDraft.builder()
+                .properties(List.of(customizer.apply(ProductPropertyDraft.builder()
                         .providerCode("001")
-                        .providerName("테스트은행")
+                        .providerName("테스트은행"))
                         .build()))
                 .build();
     }
