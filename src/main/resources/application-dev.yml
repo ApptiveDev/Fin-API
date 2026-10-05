@@ -37,7 +37,8 @@ collector:
   # 29 -> 30: KFB 상품 링크를 정규화 단계에서 인코딩·검증하도록 바꿨다. raw가 그대로면 재정규화되지 않아
   # 이전 코드로 정규화된 KFB 상품(공백이 섞인 IBK 링크 등)이 남으므로 버전을 올린다.
   # 30 -> 31: KFB 상품 링크를 은행 도메인과 대조하고 홈페이지 링크를 버리도록 바꿨다. 같은 이유로 재정규화한다.
-  normalizer-version: 31
+  # 31 -> 32: 최고금리 적용 범위·이자지급방식 컬럼을 추가했다. raw는 그대로라 재정규화해야 채워진다.
+  normalizer-version: 32
   reader-page-size : 500
   unseen-disable-period : 1
 
