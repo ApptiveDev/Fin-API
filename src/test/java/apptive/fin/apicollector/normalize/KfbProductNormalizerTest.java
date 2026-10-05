@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -178,7 +179,7 @@ class KfbProductNormalizerTest {
                 7,
                 null,
                 null,
-                new CollectorProperties.Llm(false, "GEMINI", "gemini-test", 1, 1, 10, 3, 0.1, "http://localhost", "")
+                new CollectorProperties.Llm(false, "GEMINI", "gemini-test", Map.of(), Map.of(), 10, 3, 0.1, "http://localhost", "")
         );
     }
 

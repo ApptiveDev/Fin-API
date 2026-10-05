@@ -87,10 +87,10 @@ public class RawProductItemReader implements ItemReader<ProductRaw> {
     }
 
     private int llmPromptVersion() {
-        return properties.llm() == null ? 0 : properties.llm().promptVersion();
+        return properties.llm() == null ? 0 : properties.llm().promptVersion(source);
     }
 
     private int llmSchemaVersion() {
-        return properties.llm() == null ? 0 : properties.llm().schemaVersion();
+        return properties.llm() == null ? 0 : properties.llm().schemaVersion(source);
     }
 }

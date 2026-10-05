@@ -127,7 +127,7 @@ public class LlmProductDraftEnricher implements ProductDraftEnricher, StepExecut
             LlmProductEnrichment enrichment = providerClient.enrich(new LlmProductEnrichmentRequest(
                     properties.llm().model(),
                     prompt,
-                    properties.llm().schemaVersion()
+                    properties.llm().schemaVersion(rawProduct.getSource())
             ));
             validator.validate(enrichment);
 

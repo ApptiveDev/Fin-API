@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -106,8 +108,8 @@ class FetchManualRawTaskletTest {
                         false,
                         "GEMINI",
                         "gemini-test",
-                        1,
-                        1,
+                        Map.of(),
+                        Map.of(),
                         10,
                         3,
                         0.1,

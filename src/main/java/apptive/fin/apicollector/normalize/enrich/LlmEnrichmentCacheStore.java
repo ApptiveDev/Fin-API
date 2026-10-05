@@ -29,8 +29,8 @@ public class LlmEnrichmentCacheStore {
                         rawProduct.getContentHash(),
                         properties.llm().provider(),
                         properties.llm().model(),
-                        properties.llm().promptVersion(),
-                        properties.llm().schemaVersion()
+                        properties.llm().promptVersion(rawProduct.getSource()),
+                        properties.llm().schemaVersion(rawProduct.getSource())
                 )
                 .orElseGet(() -> LlmEnrichmentCache.create(
                         rawProduct.getSource(),
@@ -38,8 +38,8 @@ public class LlmEnrichmentCacheStore {
                         rawProduct.getContentHash(),
                         properties.llm().provider(),
                         properties.llm().model(),
-                        properties.llm().promptVersion(),
-                        properties.llm().schemaVersion(),
+                        properties.llm().promptVersion(rawProduct.getSource()),
+                        properties.llm().schemaVersion(rawProduct.getSource()),
                         requestHash
                 ));
     }
