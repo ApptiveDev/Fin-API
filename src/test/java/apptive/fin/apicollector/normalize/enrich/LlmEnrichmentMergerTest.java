@@ -72,7 +72,7 @@ class LlmEnrichmentMergerTest {
 
     @Test
     void parking_fillsMinDepositAmountAndMaxRateApplicableRangeFromLlm() {
-        ProductDraft result = merger.merge(kfbDraft("1천만원 이하 1.50%, 1천만원 초과~1억원 이하 2.00%"),
+        ProductDraft result = merger.merge(kfbDraft("1천만원 이하 1.50%, 1천만원 초과~1억원 이하 2.00% / 가입금액: 1만원 이상"),
                 enrichmentWithRange(10_000L, 10_000_000L, 100_000_000L));
 
         ProductPropertyDraft property = result.properties().getFirst();
@@ -128,6 +128,20 @@ class LlmEnrichmentMergerTest {
 
         assertThat(merger.merge(draft, enrichmentWithRange(null, null, 5_000_000L))
                 .properties().getFirst().maxRateApplicableMaxAmount()).isNull();
+    }
+
+    @Test
+    void parking_keepsLlmMinDepositOnlyWhenWrittenAsMinimumDeposit() {
+        assertThat(minDepositOf("가입금액: 1만원 이상 500만원 이하", 10_000L)).isEqualTo(10_000L);
+        assertThat(minDepositOf("실명의 개인 / 계좌당 가입 최저한도 : 100만원", 1_000_000L)).isEqualTo(1_000_000L);
+        // 실측 오류: 잔액 구간의 시작 금액, 지정금액
+        assertThat(minDepositOf("-예금잔액1원~1천만원이하 : 2.35%", 1L)).isNull();
+        assertThat(minDepositOf("1인1계좌 / 최소지정금액 :1천만원 / 최대 고객지정금액 : 10억원", 10_000_000L)).isNull();
+    }
+
+    private Long minDepositOf(String content, Long llmMinDeposit) {
+        return merger.merge(kfbDraft(content), enrichmentWithRange(llmMinDeposit, null, null))
+                .properties().getFirst().minDepositAmount();
     }
 
     @Test

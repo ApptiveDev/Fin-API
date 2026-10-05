@@ -1129,7 +1129,8 @@ class LlmProductDraftEnricherTest {
     @Test
     void enrichesKfbParkingDraftWithKfbPromptAndPreservesDisclosureFacts() {
         // KFB는 규칙 추출 우대금리가 없어 LLM 결과가 그대로 쓰인다. 공시에서 온 금리·한도·링크는 LLM이 바꾸지 못하고,
-        // 파킹통장에는 월 납입 개념이 없어 LLM이 채워도 null이어야 한다. 최소 가입금액과 최고금리 적용 범위는 LLM 값을 쓴다.
+        // 파킹통장에는 월 납입 개념이 없어 LLM이 채워도 null이어야 한다. 최고금리 적용 범위는 공시에 적힌 금액이면 LLM 값을 쓰고,
+        // 최소 가입금액은 공시에 가입금액 문구로 적혀 있지 않아 버린다.
         LlmProviderClient providerClient = mock(LlmProviderClient.class);
         LlmEnrichmentCacheRepository cacheRepository = mock(LlmEnrichmentCacheRepository.class);
         when(providerClient.supports("GEMINI")).thenReturn(true);
@@ -1183,7 +1184,7 @@ class LlmProductDraftEnricherTest {
         assertThat(property.minAge()).isEqualTo(14);
         assertThat(property.minMonthlyLimit()).isNull();
         assertThat(property.maxMonthlyLimit()).isNull();
-        assertThat(property.minDepositAmount()).isEqualTo(1_000L);
+        assertThat(property.minDepositAmount()).isNull();
         assertThat(property.baseRate()).isEqualByComparingTo("1.50");
         assertThat(property.maxRate()).isEqualByComparingTo("2.50");
         assertThat(property.maxDepositAmount()).isEqualTo(100_000_000L);
