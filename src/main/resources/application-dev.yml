@@ -65,9 +65,10 @@ collector:
     model: ${GEMINI_MODEL:gemini-2.5-flash-lite}
     # 소스별 버전. 하나로 같이 쓰면 KFB 프롬프트만 바꿔도 FSS 캐시까지 무효가 되어 전체를 다시 호출한다.
     # KFB 8 -> 9, 16 -> 17: 최고금리 적용 범위(maxRateApplicable*)와 파킹 최소 가입금액(minDepositAmount) 추출을 추가했다.
+    # KFB 9 -> 10: 우대금리 적용 한도로 범위를 좁히는 규칙과 최소 가입금액 제외 예시를 추가했다.
     prompt-versions:
       FSS: 8
-      KFB: 9
+      KFB: 10
     schema-versions:
       FSS: 16
       KFB: 17

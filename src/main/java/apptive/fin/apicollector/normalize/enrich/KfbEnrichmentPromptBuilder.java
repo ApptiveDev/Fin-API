@@ -34,7 +34,8 @@ public class KfbEnrichmentPromptBuilder implements EnrichmentPromptBuilder {
                 - productType은 PARKING(입출금이 자유로운 통장)이다. 월 납입·만기 개념이 없다.
                 - minMonthlyLimit, maxMonthlyLimit는 항상 null로 둔다.
                 - minDepositAmount는 가입·예치할 수 있는 최소 금액이 원문에 명시된 경우만 채운다(예: "가입금액: 1만원 이상" → 10000). 없으면 null.
-                  최고한도·예치한도·우대금리 적용 한도·잔액 구간 경계는 minDepositAmount가 아니다.
+                  최고한도·예치한도·우대금리 적용 한도는 minDepositAmount가 아니다.
+                  잔액 구간의 시작 금액(예: "1원~1천만원 이하"의 1원), 지정금액·목표금액, 우대조건의 금액(예: "월평균 잔액 50만원 이상")도 minDepositAmount가 아니다.
                 - 정부기여금(govContributionRate, govContributionType, govMatchingRatio, govMonthlyFixedContribution, govContributionPeriodMonths)은 항상 null로 둔다.
                 - allowsMilitaryAgeExtension, excludeFromRateComparison, requiresHomeless, requiresHouseholder는 원문에 명시되지 않았으면 false로 둔다.
                 - keywords에는 기간 키워드(TERM_*)를 넣지 않는다.
@@ -84,6 +85,10 @@ public class KfbEnrichmentPromptBuilder implements EnrichmentPromptBuilder {
                   * 중간 구간이 가장 높으면(예: "1천만원 이하 1.50%%, 1천만원 초과~1억원 이하 2.00%%, 1억원 초과 0.10%%"): 하한 10000000, 상한 100000000.
                   * 마지막 구간("○원 초과")이 가장 높으면: 하한 그 금액, 상한 null.
                 - "1억원 미만 / 1억원 이상"처럼 경계를 반대로 적은 상품도 같은 금액을 경계로 옮긴다(예: "1억원 미만"이 가장 높으면 상한 100000000).
+                - maxRate는 가장 높은 구간 금리에 우대금리(이벤트 우대 포함)를 더한 값일 수 있다.
+                  우대금리가 잔액 일부에만 적용되면, 가장 높은 구간과 그 우대금리 적용 금액이 겹치는 범위를 넣는다.
+                  예: "3천만원 이하 2.00%%, 3천만원 초과 1.50%%"에 "1백만원 이하 금액에 1.00%%p 우대"면 하한 null, 상한 1000000.
+                - 응답 전에 확인한다: 범위 안의 잔액에 적용되는 구간 금리와 우대금리를 더하면 maxRate가 되는가. 아니면 범위를 다시 고른다.
                 - 금리가 하나뿐이거나, 구간이 잔액이 아니라 예치기간·지정금액 배수 등이면 둘 다 null로 둔다.
                 - 원문에 적힌 금액만 쓴다. 최고한도(maxLimit)를 범위로 옮기거나 금액을 추정하지 않는다.
 
