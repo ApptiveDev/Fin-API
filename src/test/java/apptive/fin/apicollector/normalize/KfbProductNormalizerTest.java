@@ -90,7 +90,7 @@ class KfbProductNormalizerTest {
         ))).properties().getFirst();
 
         assertThat(property.maxDepositAmount()).isEqualTo(5_000_000L);
-        assertThat(property.preferentialRateLimitAmount()).isNull();
+        assertThat(property.maxRateApplicableMaxAmount()).isNull();
         assertThat(property.maxMonthlyLimit()).isNull();
     }
 
@@ -102,7 +102,8 @@ class KfbProductNormalizerTest {
         ))).properties().getFirst();
 
         assertThat(property.maxDepositAmount()).isNull();
-        assertThat(property.preferentialRateLimitAmount()).isEqualTo(5_000_000L);
+        assertThat(property.maxRateApplicableMaxAmount()).isEqualTo(5_000_000L);
+        assertThat(property.maxRateApplicableMinAmount()).isNull();
         assertThat(property.maxMonthlyLimit()).isNull();
     }
 

@@ -1186,7 +1186,7 @@ class LlmProductDraftEnricherTest {
         assertThat(property.baseRate()).isEqualByComparingTo("1.50");
         assertThat(property.maxRate()).isEqualByComparingTo("2.50");
         assertThat(property.maxDepositAmount()).isEqualTo(100_000_000L);
-        assertThat(property.preferentialRateLimitAmount()).isNull();
+        assertThat(property.maxRateApplicableMaxAmount()).isNull();
         assertThat(property.applyUrl()).isEqualTo("https://bank.example.com/parking");
         verify(cacheRepository).save(any(LlmEnrichmentCache.class));
     }

@@ -105,6 +105,23 @@ class ProductTest {
     }
 
     @Test
+    void replacePropertiesStoresMaxRateApplicableRangeAndInterestPaymentMethod() {
+        Product product = newProduct();
+        Provider provider = newProvider(product.getSource());
+
+        product.replaceProperties(List.of(draft(null, null, new BigDecimal("1.50")).toBuilder()
+                .maxRateApplicableMinAmount(10_000_000L)
+                .maxRateApplicableMaxAmount(100_000_000L)
+                .interestPaymentMethod("월지급")
+                .build()), ignored -> provider);
+
+        ProductProperty property = product.getProperties().getFirst();
+        assertThat(property.getMaxRateApplicableMinAmount()).isEqualTo(10_000_000L);
+        assertThat(property.getMaxRateApplicableMaxAmount()).isEqualTo(100_000_000L);
+        assertThat(property.getInterestPaymentMethod()).isEqualTo("월지급");
+    }
+
+    @Test
     void replacePropertiesAddsNewKeyWhileKeepingExisting() {
         Product product = newProduct();
         Provider provider = newProvider(product.getSource());

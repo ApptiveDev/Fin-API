@@ -87,7 +87,8 @@ public class KfbProductNormalizer implements ProductNormalizer {
         String preferentialCondition = JsonNodes.text(raw, "preferentialCondition");
         String etcNote = JsonNodes.text(raw, "etcNote");
 
-        // 최고한도는 상품마다 예치 한도이기도, 우대금리 적용 한도이기도 하다. 예치 한도만 저장 컬럼에 넣는다.
+        // 최고한도는 상품마다 예치 한도이기도, 우대금리 적용 한도이기도 하다.
+        // 우대금리 적용 한도면 그 금액까지 최고금리가 적용된다고 보고 적용 범위 상한에 넣는다.
         Long maxLimit = JsonNodes.longValueOrNullIfZero(raw, "maxLimit");
         boolean isPreferentialRateLimit = limitClassifier.isPreferentialRateLimit(preferentialCondition, etcNote);
 
@@ -100,7 +101,7 @@ public class KfbProductNormalizer implements ProductNormalizer {
                 .baseRate(JsonNodes.decimal(raw, "baseRate"))
                 .maxRate(JsonNodes.decimal(raw, "maxRate"))
                 .maxDepositAmount(isPreferentialRateLimit ? null : maxLimit)
-                .preferentialRateLimitAmount(isPreferentialRateLimit ? maxLimit : null)
+                .maxRateApplicableMaxAmount(isPreferentialRateLimit ? maxLimit : null)
                 .interestPaymentMethod(interestPayment)
                 .requiredKeywords(requiredKeywordExtractor.extract(JsonNodes.text(raw, "joinTarget"), etcNote))
                 // 우대조건 칸에 잔액 구간별 금리("1억원초과 : 0.01%")가 섞여 있어 규칙 추출기가 이를 우대금리로 잘못 잡는다.
@@ -108,7 +109,7 @@ public class KfbProductNormalizer implements ProductNormalizer {
                 .build();
     }
 
-    // 이자지급방식은 저장 컬럼이 없어 본문에라도 남긴다.
+    // 이자지급방식은 컬럼에도 저장하지만, 상세 본문을 읽는 화면을 위해 본문 첫 줄에도 남긴다.
     private static String content(JsonNode raw, String interestPayment) {
         String details = JsonNodes.joinContent(raw, "joinMethod", "preferentialCondition", "joinRestriction", "joinTarget", "etcNote");
         if (interestPayment == null) {
