@@ -23,7 +23,7 @@ class KfbClientTest {
     private static final Charset EUC_KR = Charset.forName("MS949");
 
     @Test
-    void searchesEachBankSeparatelyAndDecodesEucKr() {
+    void searchesAllBanksInOneRequestAndDecodesEucKr() {
         RestClient.Builder builder = RestClient.builder().baseUrl("http://localhost");
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         KfbClient client = new KfbClient(builder.build(), new KfbFreeDepositParser());
@@ -36,12 +36,8 @@ class KfbClientTest {
                         """));
         server.expect(requestTo("http://localhost/compare/free_deposit_search_result_sort.php"))
                 .andExpect(method(HttpMethod.POST))
-                .andExpect(content().formDataContains(Map.of("BankValue", "0010001")))
-                .andRespond(eucKr(resultTable("우리은행", "WON통장")));
-        server.expect(requestTo("http://localhost/compare/free_deposit_search_result_sort.php"))
-                .andExpect(method(HttpMethod.POST))
-                .andExpect(content().formDataContains(Map.of("BankValue", "0015130")))
-                .andRespond(eucKr(resultTable("카카오뱅크", "세이프박스")));
+                .andExpect(content().formDataContains(Map.of("BankValue", "0010001|0015130")))
+                .andRespond(eucKr(resultTable(row("우리은행", "WON통장") + row("카카오뱅크", "세이프박스"))));
 
         List<KfbRawProduct> products = client.fetchAll();
 
@@ -58,12 +54,14 @@ class KfbClientTest {
         return withSuccess(html.getBytes(EUC_KR), new MediaType("text", "html", EUC_KR));
     }
 
-    private static String resultTable(String bankName, String productName) {
+    private static String resultTable(String rows) {
+        return "<table class=\"resultList_ty02\"><tbody>" + rows + "</tbody></table>";
+    }
+
+    private static String row(String bankName, String productName) {
         return """
-                <table class="resultList_ty02"><tbody>
                 <tr><td>%s&nbsp;</td><td class="tl"><a href="https://bank.example/p">%s</a></td>
                 <td>0.10</td><td>2.00</td><td>월지급</td><td>보기</td></tr>
-                </tbody></table>
                 """.formatted(bankName, productName);
     }
 }

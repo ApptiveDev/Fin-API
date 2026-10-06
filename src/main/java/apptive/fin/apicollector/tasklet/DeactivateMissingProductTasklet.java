@@ -5,6 +5,7 @@ import apptive.fin.apicollector.config.CollectorProperties;
 import apptive.fin.apicollector.product.service.ProductSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -57,7 +58,12 @@ public class DeactivateMissingProductTasklet implements Tasklet {
 
         }
 
-        if (properties.source() == Source.ALL || properties.source() == Source.KFB) {
+        // ALL 실행은 KFB 수집이 실패해도 계속 진행한다. 이때 KFB raw의 lastSeen이 갱신되지 않았으므로
+        // 비활성화하면 KFB 상품이 전부 꺼진다. 그래서 이번 실행에서 수집이 실패했으면 건너뛴다.
+        if (stepFailedInThisRun(chunkContext, FetchKfbRawTasklet.STEP_NAME)) {
+            log.warn("DeactivateMissingProductTasklet: kfb skipped because {} failed in this run", FetchKfbRawTasklet.STEP_NAME);
+        }
+        else if (properties.source() == Source.ALL || properties.source() == Source.KFB) {
             int kfbDeactivated = productSyncService.disableAllUnseenProducts(Source.KFB, threshold);
             log.info(
                     "DeactivateMissingProductTasklet: kfb={}",
@@ -66,5 +72,12 @@ public class DeactivateMissingProductTasklet implements Tasklet {
         }
 
         return RepeatStatus.FINISHED;
+    }
+
+    // 실패 뒤 흐름이 이어진 step은 BatchStatus가 ABANDONED가 되고 ExitStatus만 FAILED로 남는다.
+    private static boolean stepFailedInThisRun(ChunkContext chunkContext, String stepName) {
+        return chunkContext.getStepContext().getStepExecution().getJobExecution().getStepExecutions().stream()
+                .anyMatch(stepExecution -> stepName.equals(stepExecution.getStepName())
+                        && ExitStatus.FAILED.getExitCode().equals(stepExecution.getExitStatus().getExitCode()));
     }
 }

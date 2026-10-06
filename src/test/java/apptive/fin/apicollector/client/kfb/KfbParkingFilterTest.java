@@ -13,8 +13,7 @@ class KfbParkingFilterTest {
     // 넓은 정의(입출금자유예금 전체 = 파킹통장)를 쓰기로 해서, 실제 공시 45개가 모두 통과해야 한다.
     @Test
     void acceptsEveryProductFromRealDisclosureUnderBroadDefinition() {
-        List<KfbRawProduct> all = new KfbFreeDepositParser()
-                .parseProducts("any", KfbFreeDepositParserTest.fixture("free_deposit_search_result_all_banks.html"));
+        List<KfbRawProduct> all = KfbFreeDepositParserTest.realProducts();
 
         assertThat(all).hasSize(45);
         assertThat(all).allMatch(filter::isParking);
@@ -38,8 +37,7 @@ class KfbParkingFilterTest {
 
     @Test
     void keepsExpectedProductsFromRealDisclosure() {
-        List<KfbRawProduct> all = new KfbFreeDepositParser()
-                .parseProducts("any", KfbFreeDepositParserTest.fixture("free_deposit_search_result_all_banks.html"));
+        List<KfbRawProduct> all = KfbFreeDepositParserTest.realProducts();
 
         List<String> kept = all.stream().filter(filter::isParking).map(KfbRawProduct::productName).toList();
 

@@ -2,6 +2,7 @@ package apptive.fin.apicollector.config;
 
 import apptive.fin.apicollector.batch.RawProductItemReader;
 import apptive.fin.apicollector.tasklet.BankProductUrlTasklet;
+import apptive.fin.apicollector.tasklet.FailIfAnyStepFailedTasklet;
 import apptive.fin.apicollector.normalize.dto.ProductDraft;
 import apptive.fin.apicollector.normalize.enrich.LlmProductDraftEnricher;
 import apptive.fin.apicollector.raw.ProductRaw;
@@ -87,7 +88,7 @@ public class FinancialProductSyncJobConfig {
             PlatformTransactionManager transactionManager,
             FetchKfbRawTasklet fetchKfbRawTasklet
     ) {
-        return new StepBuilder("fetchKfbRawStep", jobRepository)
+        return new StepBuilder(FetchKfbRawTasklet.STEP_NAME, jobRepository)
                 .tasklet(fetchKfbRawTasklet, transactionManager)
                 .build();
     }
@@ -152,18 +153,24 @@ public class FinancialProductSyncJobConfig {
             Step normalizeKfbRawProductStep,
             Step deactivateMissingProductStep,
             Step bankProductUrlStep,
-            Step resolveProductDisplayNameStep
+            Step resolveProductDisplayNameStep,
+            Step failIfAnyStepFailedStep
     ) {
+        // KFB는 외부 HTML 스크래핑이라 깨지기 쉽다. 실패해도 다른 소스는 끝까지 돌리고(KFB 비활성화는
+        // DeactivateMissingProductTasklet이 건너뜀), 마지막 step에서 잡을 FAILED로 끝내 실패를 드러낸다.
         return new FlowBuilder<Flow>("allSyncFlow")
                 .start(fetchManualRawStep)
                 .next(fetchFssRawStep)
                 .next(fetchKfbRawStep)
-                .next(normalizeOntongRawProductStep)
+                    .on("FAILED").to(normalizeOntongRawProductStep)
+                .from(fetchKfbRawStep)
+                    .on("*").to(normalizeOntongRawProductStep)
                 .next(normalizeFssRawProductStep)
                 .next(normalizeKfbRawProductStep)
                 .next(deactivateMissingProductStep)
                 .next(bankProductUrlStep)
                 .next(resolveProductDisplayNameStep)
+                .next(failIfAnyStepFailedStep)
                 .build();
     }
 
@@ -273,6 +280,17 @@ public class FinancialProductSyncJobConfig {
     ) {
         return new StepBuilder("resolveProductDisplayNameStep", jobRepository)
                 .tasklet(resolveProductDisplayNameTasklet, transactionManager)
+                .build();
+    }
+
+    @Bean
+    public Step failIfAnyStepFailedStep(
+            JobRepository jobRepository,
+            PlatformTransactionManager transactionManager,
+            FailIfAnyStepFailedTasklet failIfAnyStepFailedTasklet
+    ) {
+        return new StepBuilder("failIfAnyStepFailedStep", jobRepository)
+                .tasklet(failIfAnyStepFailedTasklet, transactionManager)
                 .build();
     }
 

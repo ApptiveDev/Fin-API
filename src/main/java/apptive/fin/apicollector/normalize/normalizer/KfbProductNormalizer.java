@@ -95,8 +95,8 @@ public class KfbProductNormalizer implements ProductNormalizer {
                 .providerCode(providerCode)
                 .providerName(bankNameNormalizer.normalize(providerCode, JsonNodes.text(raw, "bankName")))
                 .providerApplyUrl(bankUrlNormalizer.normalize(providerCode).orElse(null))
-                // 공시 원본 링크는 깨져 있거나 공백이 섞여 있기도 해서, 아웃링크로 쓸 수 있게 정규화한다.
-                .applyUrl(productUrlNormalizer.normalize(JsonNodes.text(raw, "productUrl")).orElse(null))
+                // 공시 원본 링크는 깨져 있거나 공백이 섞여 있거나 홈페이지이기도 해서, 그 은행 도메인의 상품 링크만 남긴다.
+                .applyUrl(productUrlNormalizer.normalize(providerCode, JsonNodes.text(raw, "productUrl")).orElse(null))
                 .baseRate(JsonNodes.decimal(raw, "baseRate"))
                 .maxRate(JsonNodes.decimal(raw, "maxRate"))
                 .maxDepositAmount(isPreferentialRateLimit ? null : maxLimit)

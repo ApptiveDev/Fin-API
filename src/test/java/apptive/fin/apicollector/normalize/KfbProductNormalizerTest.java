@@ -15,6 +15,7 @@ import apptive.fin.apicollector.normalize.extractor.keywords.TermKeywordRecogniz
 import apptive.fin.apicollector.normalize.normalizer.FssBankNameNormalizer;
 import apptive.fin.apicollector.normalize.normalizer.FssBankUrlNormalizer;
 import apptive.fin.apicollector.normalize.normalizer.KfbProductNormalizer;
+import apptive.fin.apicollector.bankurl.scraper.BankProductScrapers;
 import apptive.fin.apicollector.normalize.normalizer.KfbProductUrlNormalizer;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import apptive.fin.apicollector.product.ProductType;
@@ -36,7 +37,7 @@ class KfbProductNormalizerTest {
             new FssBankNameNormalizer(),
             new FssBankUrlNormalizer(),
             new KfbLimitClassifier(),
-            new KfbProductUrlNormalizer()
+            new KfbProductUrlNormalizer(BankProductScrapers.all())
     );
 
     @Test
