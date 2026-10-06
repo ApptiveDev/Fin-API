@@ -14,6 +14,8 @@ import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -70,6 +72,7 @@ class GeminiLlmProviderClientTest {
                 .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
         LlmProductEnrichment result = client.enrich(new LlmProductEnrichmentRequest(
+                Source.FSS,
                 "gemini-test",
                 "한국어 가입 조건을 요약해줘",
                 1
@@ -106,6 +109,7 @@ class GeminiLlmProviderClientTest {
                 .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
         LlmProductEnrichment result = client.enrich(new LlmProductEnrichmentRequest(
+                Source.FSS,
                 "gemini-test",
                 "가입 조건을 요약해줘",
                 1
@@ -129,8 +133,8 @@ class GeminiLlmProviderClientTest {
                         true,
                         "GEMINI",
                         "gemini-test",
-                        1,
-                        1,
+                        Map.of(),
+                        Map.of(),
                         10,
                         3,
                         temperature,
@@ -143,7 +147,7 @@ class GeminiLlmProviderClientTest {
     private LlmProductEnrichment emptyEnrichment() {
         return new LlmProductEnrichment(
                 null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null, null
         );
     }
 }

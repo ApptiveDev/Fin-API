@@ -53,7 +53,9 @@ public class GeminiResponseParser {
                 JsonNodes.bool(enrichmentNode, "allowsMilitaryAgeExtension"),
                 JsonNodes.integer(enrichmentNode, "militaryMaxAge"),
                 requiredKeywords(enrichmentNode.path("requiredKeywords")),
-                preferentialRates(enrichmentNode.path("preferentialRates"))
+                preferentialRates(enrichmentNode.path("preferentialRates")),
+                JsonNodes.longValue(enrichmentNode, "maxRateApplicableMinAmount"),
+                JsonNodes.longValue(enrichmentNode, "maxRateApplicableMaxAmount")
         );
     }
 

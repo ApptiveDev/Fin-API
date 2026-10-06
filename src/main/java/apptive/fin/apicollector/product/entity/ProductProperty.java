@@ -75,9 +75,16 @@ public class ProductProperty {
     private Long minMonthlyLimit;
     private Long maxMonthlyLimit;
 
-    // 예금 전용: 최소/최대 예치가능금액
+    // 예금·파킹: 최소/최대 예치가능금액
     private Long minDepositAmount;
     private Long maxDepositAmount;
+
+    // 파킹 전용: 최고금리가 적용되는 잔액 범위(원). 하한은 초과, 상한은 이하
+    private Long maxRateApplicableMinAmount;
+    private Long maxRateApplicableMaxAmount;
+
+    // 이자지급방식 원문(예: "수시지급,월지급")
+    private String interestPaymentMethod;
 
     private Integer minAge;
     private Integer maxAge;
@@ -167,6 +174,9 @@ public class ProductProperty {
         this.maxMonthlyLimit = propertyDraft.maxMonthlyLimit();
         this.minDepositAmount = propertyDraft.minDepositAmount();
         this.maxDepositAmount = propertyDraft.maxDepositAmount();
+        this.maxRateApplicableMinAmount = propertyDraft.maxRateApplicableMinAmount();
+        this.maxRateApplicableMaxAmount = propertyDraft.maxRateApplicableMaxAmount();
+        this.interestPaymentMethod = propertyDraft.interestPaymentMethod();
         this.minAge = propertyDraft.minAge();
         this.maxAge = propertyDraft.maxAge();
         this.allowsMilitaryAgeExtension = propertyDraft.allowsMilitaryAgeExtension();

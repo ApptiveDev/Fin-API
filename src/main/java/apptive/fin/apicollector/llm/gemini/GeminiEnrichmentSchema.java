@@ -1,5 +1,6 @@
 package apptive.fin.apicollector.llm.gemini;
 
+import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,7 @@ public class GeminiEnrichmentSchema {
 
     private final ObjectMapper objectMapper;
 
-    public ObjectNode build() {
+    public ObjectNode build(Source source) {
         ObjectNode schema = objectMapper.createObjectNode();
         schema.put("type", "object");
 
@@ -40,6 +41,11 @@ public class GeminiEnrichmentSchema {
         properties.set("militaryMaxAge", integerSchema("병역 연장 적용 후 최대 나이. 없으면 null"));
         properties.set("requiredKeywords", requiredKeywordsSchema());
         properties.set("preferentialRates", preferentialRatesSchema());
+        // 파킹통장 전용 필드는 KFB 스키마에만 둔다. FSS 스키마·프롬프트가 바뀌면 FSS 캐시가 무효가 된다.
+        if (source == Source.KFB) {
+            properties.set("maxRateApplicableMinAmount", integerSchema("최고금리가 적용되는 잔액 범위의 하한(원, 이 금액 초과). 하한이 없거나 금액 범위가 아니면 null"));
+            properties.set("maxRateApplicableMaxAmount", integerSchema("최고금리가 적용되는 잔액 범위의 상한(원, 이 금액 이하). 상한이 없거나 금액 범위가 아니면 null"));
+        }
 
         schema.set("properties", properties);
         // 모든 property가 required이므로 이름을 재나열하지 않고 properties에서 파생한다

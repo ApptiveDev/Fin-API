@@ -35,6 +35,13 @@ public class LlmEnrichmentValidator {
                 && enrichment.maxMonthlyLimit() < enrichment.minMonthlyLimit()) {
             throw new IllegalArgumentException("maxMonthlyLimit is smaller than minMonthlyLimit");
         }
+        validateAmount(enrichment.maxRateApplicableMinAmount(), "maxRateApplicableMinAmount");
+        validateAmount(enrichment.maxRateApplicableMaxAmount(), "maxRateApplicableMaxAmount");
+        if (enrichment.maxRateApplicableMinAmount() != null
+                && enrichment.maxRateApplicableMaxAmount() != null
+                && enrichment.maxRateApplicableMaxAmount() <= enrichment.maxRateApplicableMinAmount()) {
+            throw new IllegalArgumentException("maxRateApplicableMaxAmount is not greater than maxRateApplicableMinAmount");
+        }
         if (enrichment.minAge() != null && enrichment.maxAge() != null && enrichment.maxAge() < enrichment.minAge()) {
             throw new IllegalArgumentException("maxAge is smaller than minAge");
         }

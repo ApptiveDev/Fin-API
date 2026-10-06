@@ -37,7 +37,8 @@ collector:
   # 29 -> 30: KFB 상품 링크를 정규화 단계에서 인코딩·검증하도록 바꿨다. raw가 그대로면 재정규화되지 않아
   # 이전 코드로 정규화된 KFB 상품(공백이 섞인 IBK 링크 등)이 남으므로 버전을 올린다.
   # 30 -> 31: KFB 상품 링크를 은행 도메인과 대조하고 홈페이지 링크를 버리도록 바꿨다. 같은 이유로 재정규화한다.
-  normalizer-version: 31
+  # 31 -> 32: 최고금리 적용 범위·이자지급방식 컬럼을 추가했다. raw는 그대로라 재정규화해야 채워진다.
+  normalizer-version: 32
   reader-page-size : 500
   unseen-disable-period : 1
 
@@ -62,8 +63,15 @@ collector:
     enabled: ${LLM_ENABLED:false}
     provider: GEMINI
     model: ${GEMINI_MODEL:gemini-2.5-flash-lite}
-    prompt-version: 8
-    schema-version: 16
+    # 소스별 버전. 하나로 같이 쓰면 KFB 프롬프트만 바꿔도 FSS 캐시까지 무효가 되어 전체를 다시 호출한다.
+    # KFB 8 -> 9, 16 -> 17: 최고금리 적용 범위(maxRateApplicable*)와 파킹 최소 가입금액(minDepositAmount) 추출을 추가했다.
+    # KFB 9 -> 10: 우대금리 적용 한도로 범위를 좁히는 규칙과 최소 가입금액 제외 예시를 추가했다.
+    prompt-versions:
+      FSS: 8
+      KFB: 10
+    schema-versions:
+      FSS: 16
+      KFB: 17
     chunk-size: ${LLM_CHUNK_SIZE:10}
     max-concurrency: ${LLM_MAX_CONCURRENCY:3}
     # temperature=0은 특정 입력에서 모델이 출력을 최대치까지 폭주 생성하는 결정적 루프에 빠졌다.

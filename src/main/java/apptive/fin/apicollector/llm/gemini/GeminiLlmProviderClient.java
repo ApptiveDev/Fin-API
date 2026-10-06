@@ -84,7 +84,7 @@ public class GeminiLlmProviderClient implements LlmProviderClient {
         ObjectNode responseFormat = objectMapper.createObjectNode();
         responseFormat.put("type", "text");
         responseFormat.put("mime_type", "application/json");
-        responseFormat.set("schema", enrichmentSchema.build());
+        responseFormat.set("schema", enrichmentSchema.build(request.source()));
         body.set("response_format", responseFormat);
 
         return body;

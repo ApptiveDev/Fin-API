@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -69,7 +70,94 @@ class LlmEnrichmentMergerTest {
         assertThat(result.properties().getFirst().preferentialRates()).hasSize(1);
     }
 
+    @Test
+    void parking_fillsMinDepositAmountAndMaxRateApplicableRangeFromLlm() {
+        ProductDraft result = merger.merge(kfbDraft("1천만원 이하 1.50%, 1천만원 초과~1억원 이하 2.00% / 가입금액: 1만원 이상"),
+                enrichmentWithRange(10_000L, 10_000_000L, 100_000_000L));
+
+        ProductPropertyDraft property = result.properties().getFirst();
+        assertThat(property.minDepositAmount()).isEqualTo(10_000L);
+        assertThat(property.maxRateApplicableMinAmount()).isEqualTo(10_000_000L);
+        assertThat(property.maxRateApplicableMaxAmount()).isEqualTo(100_000_000L);
+    }
+
+    @Test
+    void parking_keepsRuleBasedRangeAsPairOverLlmRange() {
+        // 공시 최고한도에서 정한 상한이 있으면 LLM 하한을 섞지 않는다. 섞으면 (1천만, 5백만)처럼 뒤집힌 범위가 된다.
+        ProductDraft draft = kfbDraft("잔액 중 5백만원 이하의 금액에 대해 우대금리 제공");
+        draft = draft.toBuilder()
+                .properties(List.of(draft.properties().getFirst().toBuilder()
+                        .maxRateApplicableMaxAmount(5_000_000L)
+                        .build()))
+                .build();
+
+        ProductDraft result = merger.merge(draft, enrichmentWithRange(null, 10_000_000L, 100_000_000L));
+
+        ProductPropertyDraft property = result.properties().getFirst();
+        assertThat(property.maxRateApplicableMinAmount()).isNull();
+        assertThat(property.maxRateApplicableMaxAmount()).isEqualTo(5_000_000L);
+    }
+
+    @Test
+    void parking_dropsLlmRangeWhoseAmountIsNotWrittenInDisclosure() {
+        // 공시 "50만원까지"를 500만으로 옮긴 실측 오류. 원문에 적힌 금액이면 받는다.
+        ProductDraft draft = kfbDraft("1인당 1계좌 가입 가능하며, 우대금리는 잔액 50만원까지 제공");
+
+        assertThat(merger.merge(draft, enrichmentWithRange(null, null, 5_000_000L))
+                .properties().getFirst().maxRateApplicableMaxAmount()).isNull();
+        assertThat(merger.merge(draft, enrichmentWithRange(null, null, 500_000L))
+                .properties().getFirst().maxRateApplicableMaxAmount()).isEqualTo(500_000L);
+    }
+
+    @Test
+    void parking_dropsLlmRangeWhenProductHasSingleRate() {
+        ProductDraft draft = kfbDraft("예치 한도 1천만원 초과 시 이자금액은 예치 한도 산정에서 제외", property -> property
+                .baseRate(new BigDecimal("1.00"))
+                .maxRate(new BigDecimal("1.00")));
+
+        assertThat(merger.merge(draft, enrichmentWithRange(null, null, 10_000_000L))
+                .properties().getFirst().maxRateApplicableMaxAmount()).isNull();
+    }
+
+    @Test
+    void parking_dropsLlmRangeEqualToDepositLimit() {
+        ProductDraft draft = kfbDraft("가입금액: 1만원 이상 500만원 이하", property -> property
+                .baseRate(new BigDecimal("1.50"))
+                .maxRate(new BigDecimal("3.90"))
+                .maxDepositAmount(5_000_000L));
+
+        assertThat(merger.merge(draft, enrichmentWithRange(null, null, 5_000_000L))
+                .properties().getFirst().maxRateApplicableMaxAmount()).isNull();
+    }
+
+    @Test
+    void parking_keepsLlmMinDepositOnlyWhenWrittenAsMinimumDeposit() {
+        assertThat(minDepositOf("가입금액: 1만원 이상 500만원 이하", 10_000L)).isEqualTo(10_000L);
+        assertThat(minDepositOf("실명의 개인 / 계좌당 가입 최저한도 : 100만원", 1_000_000L)).isEqualTo(1_000_000L);
+        // 실측 오류: 잔액 구간의 시작 금액, 지정금액
+        assertThat(minDepositOf("-예금잔액1원~1천만원이하 : 2.35%", 1L)).isNull();
+        assertThat(minDepositOf("1인1계좌 / 최소지정금액 :1천만원 / 최대 고객지정금액 : 10억원", 10_000_000L)).isNull();
+    }
+
+    private Long minDepositOf(String content, Long llmMinDeposit) {
+        return merger.merge(kfbDraft(content), enrichmentWithRange(llmMinDeposit, null, null))
+                .properties().getFirst().minDepositAmount();
+    }
+
+    @Test
+    void nonParking_ignoresLlmMaxRateApplicableRange() {
+        ProductDraft result = merger.merge(draft(ProductType.DEPOSIT, null), enrichmentWithRange(null, 10_000_000L, 100_000_000L));
+
+        ProductPropertyDraft property = result.properties().getFirst();
+        assertThat(property.maxRateApplicableMinAmount()).isNull();
+        assertThat(property.maxRateApplicableMaxAmount()).isNull();
+    }
+
     private ProductDraft kfbDraft(String content) {
+        return kfbDraft(content, property -> property);
+    }
+
+    private ProductDraft kfbDraft(String content, UnaryOperator<ProductPropertyDraft.ProductPropertyDraftBuilder> customizer) {
         return ProductDraft.builder()
                 .rawId(1L)
                 .rawSource(Source.KFB)
@@ -79,9 +167,9 @@ class LlmEnrichmentMergerTest {
                 .productCode("KFB:PARKING:001:파킹통장")
                 .productName("파킹통장")
                 .content(content)
-                .properties(List.of(ProductPropertyDraft.builder()
+                .properties(List.of(customizer.apply(ProductPropertyDraft.builder()
                         .providerCode("001")
-                        .providerName("테스트은행")
+                        .providerName("테스트은행"))
                         .build()))
                 .build();
     }
@@ -97,7 +185,7 @@ class LlmEnrichmentMergerTest {
     private LlmProductEnrichment enrichmentWithRates(PreferentialRateDraft... rates) {
         return new LlmProductEnrichment(
                 null, List.of(), null, null, null, null, null, null, null,
-                false, false, null, null, null, null, null, false, false, null, List.of(), List.of(rates));
+                false, false, null, null, null, null, null, false, false, null, List.of(), List.of(rates), null, null);
     }
 
     private ProductDraft draft(ProductType type, Long existingMinDepositAmount) {
@@ -118,9 +206,15 @@ class LlmEnrichmentMergerTest {
                 .build();
     }
 
+    private LlmProductEnrichment enrichmentWithRange(Long minDepositAmount, Long rangeMin, Long rangeMax) {
+        return new LlmProductEnrichment(
+                null, List.of(), null, null, minDepositAmount, null, null, null, null,
+                false, false, null, null, null, null, null, false, false, null, List.of(), List.of(), rangeMin, rangeMax);
+    }
+
     private LlmProductEnrichment enrichmentWithMinDeposit(Long minDepositAmount) {
         return new LlmProductEnrichment(
                 null, List.of(), null, null, minDepositAmount, null, null, null, null,
-                false, false, null, null, null, null, null, false, false, null, List.of(), List.of());
+                false, false, null, null, null, null, null, false, false, null, List.of(), List.of(), null, null);
     }
 }
