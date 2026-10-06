@@ -49,7 +49,8 @@ public class ProductSyncService {
         List<DisplayNameResolver.Item> items = products.stream()
                 .map(product -> new DisplayNameResolver.Item(
                         product.getId(),
-                        Source.FSS.name().equals(product.getSource().getCode()) ? Source.FSS : Source.ONTONG,
+                        // product_source.code는 sync 시 Source.name()으로만 만들어진다.
+                        Source.valueOf(product.getSource().getCode()),
                         product.getOriginalName()
                 ))
                 .toList();

@@ -31,13 +31,14 @@ class FetchKfbRawTaskletTest {
 
     private final KfbClient kfbClient = mock(KfbClient.class);
     private final RawProductSaveService saveService = mock(RawProductSaveService.class);
+    // 필터 규칙 자체는 KfbParkingFilterTest가 본다. 여기서는 tasklet이 필터 판정을 따르는지만 본다.
+    private final KfbParkingFilter parkingFilter = mock(KfbParkingFilter.class);
 
     @Test
-    void savesOnlyParkingProductsAsKfbParkingRaw() {
-        when(kfbClient.fetchAll()).thenReturn(List.of(
-                product("세이프박스", "1.60"),
-                product("주거래우대통장", "0.10")
-        ));
+    void savesAcceptedProductAsKfbParkingRaw() {
+        KfbRawProduct safeBox = product("세이프박스", "1.60");
+        when(kfbClient.fetchAll()).thenReturn(List.of(safeBox));
+        when(parkingFilter.isParking(safeBox)).thenReturn(true);
         when(saveService.saveOrUpdate(any(), anyString(), any(), any())).thenReturn(SaveResult.INSERTED);
         ArgumentCaptor<JsonNode> raw = ArgumentCaptor.forClass(JsonNode.class);
 
@@ -55,6 +56,17 @@ class FetchKfbRawTaskletTest {
         assertThat(raw.getValue().path("productName").asText()).isEqualTo("세이프박스");
         assertThat(raw.getValue().path("baseRate").decimalValue()).isEqualByComparingTo("1.60");
         assertThat(raw.getValue().path("maxLimit").asLong()).isEqualTo(100_000_000L);
+    }
+
+    @Test
+    void skipsProductRejectedByFilter() {
+        KfbRawProduct rejected = product("주거래우대통장", "0.10");
+        when(kfbClient.fetchAll()).thenReturn(List.of(rejected));
+        when(parkingFilter.isParking(rejected)).thenReturn(false);
+
+        tasklet(Mode.SYNC).execute(null, null);
+
+        verifyNoInteractions(saveService);
     }
 
     // 페이지 구조가 바뀌어 0건이 되면, 조용히 넘어가는 대신 실패시켜 기존 상품이 전부 비활성화되지 않게 한다.
@@ -75,7 +87,7 @@ class FetchKfbRawTaskletTest {
     }
 
     private FetchKfbRawTasklet tasklet(Mode mode) {
-        return new FetchKfbRawTasklet(kfbClient, new KfbParkingFilter(), saveService, properties(mode), new ObjectMapper());
+        return new FetchKfbRawTasklet(kfbClient, parkingFilter, saveService, properties(mode), new ObjectMapper());
     }
 
     private static KfbRawProduct product(String name, String baseRate) {

@@ -36,4 +36,17 @@ public class ItemReaderConfig {
                 Source.ONTONG
         );
     }
+
+    @Bean
+    @StepScope
+    public RawProductItemReader kfbRawProductItemReader(
+            ProductRawRepository repository,
+            CollectorProperties properties
+    ) {
+        return new RawProductItemReader(
+                repository,
+                properties,
+                Source.KFB
+        );
+    }
 }

@@ -19,7 +19,7 @@ public class BankProductUrlPersistenceService {
             if (result.status() != ScrapeStatus.PASS) {
                 continue;
             }
-            updated += repository.updateActiveFssProductUrl(
+            updated += repository.updateActiveProductUrl(
                     result.target().productId(),
                     result.target().providerCode(),
                     result.productUrl()

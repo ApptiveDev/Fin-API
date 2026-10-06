@@ -18,9 +18,9 @@ public class InterestKeywordRecognizer implements KeywordRecognizer {
         String title = productDraft.productName();
         ProductType type = productDraft.type();
 
-        // ProductType이 DEPOSIT/SAVING이면 텍스트 매칭 없이 결정적으로 INTEREST_SAVINGS를 부여한다.
+        // ProductType이 DEPOSIT/SAVING/PARKING이면 텍스트 매칭 없이 결정적으로 INTEREST_SAVINGS를 부여한다.
         // ProductType에는 LOAN 값이 없으므로 INTEREST_LOAN은 상품명 매칭을 그대로 유지한다.
-        if (type == ProductType.DEPOSIT || type == ProductType.SAVING) {
+        if (type == ProductType.DEPOSIT || type == ProductType.SAVING || type == ProductType.PARKING) {
             keywords.add(KeywordValueEnum.INTEREST_SAVINGS);
         }
         else {

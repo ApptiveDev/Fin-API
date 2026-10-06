@@ -57,6 +57,14 @@ public class DeactivateMissingProductTasklet implements Tasklet {
 
         }
 
+        if (properties.source() == Source.ALL || properties.source() == Source.KFB) {
+            int kfbDeactivated = productSyncService.disableAllUnseenProducts(Source.KFB, threshold);
+            log.info(
+                    "DeactivateMissingProductTasklet: kfb={}",
+                    kfbDeactivated
+            );
+        }
+
         return RepeatStatus.FINISHED;
     }
 }

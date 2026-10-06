@@ -5,6 +5,7 @@ import apptive.fin.apicollector.tasklet.BankProductUrlTasklet;
 import apptive.fin.apicollector.normalize.dto.ProductDraft;
 import apptive.fin.apicollector.normalize.enrich.FssLlmProductDraftEnricher;
 import apptive.fin.apicollector.raw.ProductRaw;
+import apptive.fin.apicollector.tasklet.FetchKfbRawTasklet;
 import apptive.fin.apicollector.tasklet.FetchManualRawTasklet;
 import apptive.fin.apicollector.tasklet.ResolveProductDisplayNameTasklet;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,7 @@ public class FinancialProductSyncJobConfig {
         JobExecutionDecider sourceDecider,
         Flow fssSyncFlow,
         Flow ontongYouthSyncFlow,
+        Flow kfbSyncFlow,
         Flow allSyncFlow
     ) {
         return new JobBuilder("financialProductSyncJob", jobRepository)
@@ -49,6 +51,8 @@ public class FinancialProductSyncJobConfig {
                     .on("FSS").to(fssSyncFlow)
                 .from(sourceDecider)
                     .on("ONTONG_YOUTH").to(ontongYouthSyncFlow)
+                .from(sourceDecider)
+                    .on("KFB").to(kfbSyncFlow)
                 .from(sourceDecider)
                     .on("ALL").to(allSyncFlow)
                 .end()
@@ -77,6 +81,16 @@ public class FinancialProductSyncJobConfig {
                 .build();
     }
 
+    @Bean
+    public Step fetchKfbRawStep(
+            JobRepository jobRepository,
+            PlatformTransactionManager transactionManager,
+            FetchKfbRawTasklet fetchKfbRawTasklet
+    ) {
+        return new StepBuilder("fetchKfbRawStep", jobRepository)
+                .tasklet(fetchKfbRawTasklet, transactionManager)
+                .build();
+    }
 
     @Bean
     public Flow fssSyncFlow(
@@ -110,12 +124,32 @@ public class FinancialProductSyncJobConfig {
                 .build();
     }
 
+    // KFB 공시 링크는 홈페이지·다른 상품·404인 경우가 있어 FSS처럼 은행 URL 스크래핑으로 검증된 링크를 덮는다.
+    @Bean
+    public Flow kfbSyncFlow(
+            Step fetchKfbRawStep,
+            Step normalizeKfbRawProductStep,
+            Step deactivateMissingProductStep,
+            Step bankProductUrlStep,
+            Step resolveProductDisplayNameStep
+    ) {
+        return new FlowBuilder<Flow>("kfbSyncFlow")
+                .start(fetchKfbRawStep)
+                .next(normalizeKfbRawProductStep)
+                .next(deactivateMissingProductStep)
+                .next(bankProductUrlStep)
+                .next(resolveProductDisplayNameStep)
+                .build();
+    }
+
     @Bean
     public Flow allSyncFlow(
             Step fetchManualRawStep,
             Step fetchFssRawStep,
+            Step fetchKfbRawStep,
             Step normalizeOntongRawProductStep,
             Step normalizeFssRawProductStep,
+            Step normalizeKfbRawProductStep,
             Step deactivateMissingProductStep,
             Step bankProductUrlStep,
             Step resolveProductDisplayNameStep
@@ -123,8 +157,10 @@ public class FinancialProductSyncJobConfig {
         return new FlowBuilder<Flow>("allSyncFlow")
                 .start(fetchManualRawStep)
                 .next(fetchFssRawStep)
+                .next(fetchKfbRawStep)
                 .next(normalizeOntongRawProductStep)
                 .next(normalizeFssRawProductStep)
+                .next(normalizeKfbRawProductStep)
                 .next(deactivateMissingProductStep)
                 .next(bankProductUrlStep)
                 .next(resolveProductDisplayNameStep)
@@ -192,6 +228,23 @@ public class FinancialProductSyncJobConfig {
         return new StepBuilder("normalizeOntongYouthRawProductStep", jobRepository)
                 .<ProductRaw, ProductDraft>chunk(100)
                 .reader(ontongRawProductItemReader)
+                .processor(rawProductItemProcessor)
+                .writer(productDraftItemWriter)
+                .transactionManager(transactionManager)
+                .build();
+    }
+
+    @Bean
+    public Step normalizeKfbRawProductStep(
+            JobRepository jobRepository,
+            PlatformTransactionManager transactionManager,
+            RawProductItemReader kfbRawProductItemReader,
+            ItemProcessor<ProductRaw, ProductDraft> rawProductItemProcessor,
+            ItemWriter<ProductDraft> productDraftItemWriter
+    ) {
+        return new StepBuilder("normalizeKfbRawProductStep", jobRepository)
+                .<ProductRaw, ProductDraft>chunk(100)
+                .reader(kfbRawProductItemReader)
                 .processor(rawProductItemProcessor)
                 .writer(productDraftItemWriter)
                 .transactionManager(transactionManager)

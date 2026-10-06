@@ -28,13 +28,15 @@ logging:
 collector:
   enabled: true
   # ONTONG = 수동 정부 정책상품(manual-products.json) 동기화. 온통청년 API 폐기로 FetchManualRawTasklet이 원천.
-  # FSS(은행 공시)까지 함께 돌리려면 ALL 로 변경.
+  # FSS(은행 공시)까지 함께 돌리려면 ALL 로 변경. KFB = 은행연합회 입출금자유예금(파킹통장) 공시.
   source: ALL
   mode: SYNC
   # REQ-001 상품명 후행 괄호 제거 재정규화를 위해 27 -> 28. (PR #20이 27로 올린 것 위에 얹음)
   # 28 -> 29: 괄호 제거를 수집기에서 걷어내고 응답 시점으로 옮겼다. 이미 28로 정규화해 괄호가 떨어진
   # 환경은 raw 가 28로 마킹돼 재정규화 대상에서 빠지므로, 버전을 올려 원천 이름을 다시 채운다.
-  normalizer-version: 29
+  # 29 -> 30: KFB 상품 링크를 정규화 단계에서 인코딩·검증하도록 바꿨다. raw가 그대로면 재정규화되지 않아
+  # 이전 코드로 정규화된 KFB 상품(공백이 섞인 IBK 링크 등)이 남으므로 버전을 올린다.
+  normalizer-version: 30
   reader-page-size : 500
   unseen-disable-period : 1
 
