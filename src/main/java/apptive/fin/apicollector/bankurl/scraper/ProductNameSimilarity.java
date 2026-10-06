@@ -12,7 +12,9 @@ public final class ProductNameSimilarity {
     private static final List<String> BANK_WORDS = List.of(
             "KB", "국민은행", "신한은행", "우리은행", "하나은행",
             "NH", "농협은행", "IBK", "기업은행", "카카오뱅크",
-            "토스뱅크", "케이뱅크"
+            "토스뱅크", "케이뱅크",
+            // 긴 이름을 먼저 지운다. "제일"만 넣으면 "제일EZ통장" 같은 상품명이 깨진다.
+            "SC제일은행", "SC제일"
     );
     private static final List<List<String>> VARIANT_MARKER_GROUPS = List.of(
             List.of("자유적립", "정액적립"),
@@ -39,6 +41,12 @@ public final class ProductNameSimilarity {
         return 0.45 * weightedRatio
                 + 0.35 * tokenSetRatio
                 + 0.20 * bigramJaccard(normalizedLeft, normalizedRight);
+    }
+
+    // 공백·기호만 무시하고 괄호 안 내용까지 같은지 본다. score()는 괄호 안을 지워서 이런 이름들이 동점이 된다.
+    public boolean sameName(String left, String right) {
+        String compactLeft = compact(left);
+        return !compactLeft.isEmpty() && compactLeft.equals(compact(right));
     }
 
     public boolean hasConflictingVariant(String left, String right) {

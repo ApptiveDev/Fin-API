@@ -18,6 +18,15 @@ class ProductNameSimilarityTest {
         assertThat(similarity.score("청년내일적금", "청년내일적금")).isEqualTo(1.0);
     }
 
+    // 공시는 "SC제일Hi통장", SC제일은행 사이트는 "Hi통장"이다. 은행명 접두어는 다른 은행처럼 비교에서 뺀다.
+    // "제일EZ통장"처럼 "제일"로 시작하는 상품명은 그대로 둔다.
+    @Test
+    void ignoresScFirstBankPrefix() {
+        assertThat(similarity.score("SC제일Hi통장", "Hi통장")).isEqualTo(1.0);
+        assertThat(similarity.score("SC제일은행 Hi통장", "Hi통장")).isEqualTo(1.0);
+        assertThat(similarity.normalize("제일EZ통장")).isEqualTo("제일ez통장");
+    }
+
     @Test
     void conflictingSavingsTypesDoNotMatch() {
         assertThat(similarity.score(

@@ -34,7 +34,7 @@ public class TossBankScraper extends AbstractBankProductScraper {
         for (Element anchor : document.select("a[href*=/product-service/]")) {
             String name = cleanText(anchor.text());
             String url = urlFromAnchor(anchor, currentUrl);
-            if (looksLikeProductName(name) && !url.isBlank()) {
+            if (isCandidateName(name) && !url.isBlank()) {
                 candidates.add(new ProductCandidate(name, url));
             }
         }

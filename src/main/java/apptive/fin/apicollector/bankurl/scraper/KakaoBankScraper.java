@@ -32,9 +32,11 @@ public class KakaoBankScraper extends AbstractBankProductScraper {
     List<ProductCandidate> extractProductLinks(Document document, String currentUrl) {
         List<ProductCandidate> candidates = new ArrayList<>();
         for (Element anchor : document.select("a[href*=/products/],a[href*=/p/]")) {
-            String name = cleanText(anchor.text());
+            // 목록 링크는 "계좌 속 여유자금을 안전하게 세이프박스"처럼 소개 문구와 상품명(<strong>)이 함께 있다.
+            Element strong = anchor.selectFirst("strong");
+            String name = cleanText(strong == null ? anchor.text() : strong.text());
             String url = urlFromAnchor(anchor, currentUrl);
-            if (looksLikeProductName(name) && !url.isBlank()) {
+            if (isCandidateName(name) && !url.isBlank()) {
                 candidates.add(new ProductCandidate(name, url));
             }
         }

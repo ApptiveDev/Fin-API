@@ -21,9 +21,12 @@ import java.util.Set;
 public class JeonbukBankScraper extends AbstractBankProductScraper {
 
     private static final String MOBILE_BASE = "https://m.jbbank.co.kr:8543";
+    // 예금(SID)·적금(SVMN)·입출금(IOMN, KFB 파킹통장) 상품몰. 세 목록 모두 같은 상품 API로 채워지고,
+    // 상세 페이지는 상품코드로 열리므로 입출금 상품도 P_M_SID_MALL_DTL 링크로 열린다.
     private static final List<String> LIST_URLS = List.of(
             MOBILE_BASE + "/JBN/P_M_SID_MALL",
-            MOBILE_BASE + "/JBN/P_M_SVMN_MALL"
+            MOBILE_BASE + "/JBN/P_M_SVMN_MALL",
+            MOBILE_BASE + "/JBN/P_M_IOMN_MALL"
     );
     private static final Set<String> PRODUCT_APIS = Set.of(
             "EBCIB_NGDSB_M_R014.jct", "EBCIB_NGDSB_M_R001.jct"
@@ -87,23 +90,12 @@ public class JeonbukBankScraper extends AbstractBankProductScraper {
         return List.copyOf(products.values());
     }
 
+    // 적립식 변형(예: JB 다이렉트적금 정액적립식/자유적립식)을 가른다.
     List<ProductCandidate> preferMatchingSavingsType(
             String productName,
             List<ProductCandidate> candidates
     ) {
-        if (productName.contains("정액적립")) {
-            List<ProductCandidate> preferred = candidates.stream()
-                    .filter(candidate -> candidate.name().contains("정액적립"))
-                    .toList();
-            return preferred.isEmpty() ? candidates : preferred;
-        }
-        if (productName.contains("자유적립")) {
-            List<ProductCandidate> preferred = candidates.stream()
-                    .filter(candidate -> candidate.name().contains("자유적립"))
-                    .toList();
-            return preferred.isEmpty() ? candidates : preferred;
-        }
-        return candidates;
+        return preferVariantOfSameProduct(productName, candidates, List.of("정액적립", "자유적립"));
     }
 
     private void collectProductResponse(Response response, Map<String, ProductCandidate> products) {

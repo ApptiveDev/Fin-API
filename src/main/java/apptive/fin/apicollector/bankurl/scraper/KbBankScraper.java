@@ -85,7 +85,7 @@ public class KbBankScraper extends AbstractBankProductScraper {
         List<ProductCandidate> candidates = new ArrayList<>();
         for (Element row : document.select("#procList li,.procList li,div.area1")) {
             String name = bestName(row, List.of("a.title", "strong > a", "strong", ".tit a", ".tit", "a"));
-            if (!looksLikeProductName(name)) {
+            if (!isCandidateName(name)) {
                 continue;
             }
             for (Element anchor : row.select("a")) {

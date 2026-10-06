@@ -2,6 +2,7 @@ package apptive.fin.apicollector.bankurl.scraper;
 
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,6 +32,23 @@ class MajorBankScrapersTest {
                 "KB맑은하늘적금",
                 "https://obank.kbstar.com/quics?page=C016613"
                         + "&cc=b061496:b061645&QSL=F&prcode=DP01000942"
+        ));
+    }
+
+    // KB모임금고처럼 이름에 예금·적금·통장이 없는 입출금 상품도 검색 결과 행이면 후보로 받는다.
+    @Test
+    void kbKeepsSearchResultWithoutDepositWord() {
+        var result = new KbBankScraper().extractSearchResults(Jsoup.parse("""
+                <div class="area1">
+                  <a href="#none" class="title"
+                     onclick="productDtlSear('DP01001593','01','입출금자유')">KB모임금고</a>
+                </div>
+                """), "https://obank.kbstar.com/quics?page=C016528");
+
+        assertThat(result).containsExactly(new ProductCandidate(
+                "KB모임금고",
+                "https://obank.kbstar.com/quics?page=C016613"
+                        + "&cc=b061496:b061645&QSL=F&prcode=DP01001593"
         ));
     }
 
@@ -89,17 +107,30 @@ class MajorBankScrapersTest {
                 .endsWith("i_trns_biz_kncd=IBK%ED%9A%8C%EC%A0%84%EC%A0%95%EA%B8%B0%20%EC%98%88%EA%B8%88");
     }
 
+    // 예금 목록 API(BMDEWP01R00.jct) 응답 구조(2026-09-27 실측). 예금·적금·입출금이 한 목록으로 온다.
     @Test
-    void kdbExtractsKnownProductCode() {
-        var result = new KdbBankScraper().extractProducts(
-                Jsoup.parse("const PROD_C='100237000101'; const PROD_NM='KDB 정기예금';"),
-                "https://banking.kdb.co.kr"
-        );
+    void kdbBuildsDetailUrlsFromProductListApi() {
+        var result = new KdbBankScraper(new ObjectMapper()).extractProductsFromApi("""
+                {
+                  "GRID_LIST": [
+                    {"WGD_NM": "KDB 정기예금", "PRD_C": "100237000101", "CTG_N1_NM": "목돈굴리기"},
+                    {"WGD_NM": "KDB Hi 입출금통장", "PRD_C": "100014000101", "CTG_N1_NM": "입출금자유상품"},
+                    {"WGD_NM": "", "PRD_C": "100000000000"}
+                  ],
+                  "HEADER_STD_WEB": {"TOT_PAG_ROW_CNT": 3}
+                }
+                """);
 
-        assertThat(result).contains(new ProductCandidate(
-                "KDB 정기예금",
-                "https://banking.kdb.co.kr/bp/BMDEWP01N10.act?PRD_C=100237000101#prd=100237000101"
-        ));
+        assertThat(result).containsExactly(
+                new ProductCandidate(
+                        "KDB 정기예금",
+                        "https://banking.kdb.co.kr/bp/BMDEWP01N10.act?PRD_C=100237000101#prd=100237000101"
+                ),
+                new ProductCandidate(
+                        "KDB Hi 입출금통장",
+                        "https://banking.kdb.co.kr/bp/BMDEWP01N10.act?PRD_C=100014000101#prd=100014000101"
+                )
+        );
     }
 
     @Test
@@ -117,5 +148,13 @@ class MajorBankScrapersTest {
                 """), "https://bank.shinhan.com");
 
         assertThat(result).containsExactly(new ProductCandidate("쏠편한 정기예금", "P123"));
+    }
+
+    // sitemap에 없는 상품의 모바일 URL(PR0401S0000F01/PR0301S0100F01?pid=…, mid 없음)은 예금·적금·입출금 모두 모바일 홈으로
+    // 튕긴다. 데스크톱 bridge 링크는 상품코드(pcd)로 상품을 연다(2026-09-27 실측: 정기예금·적금·입출금통장).
+    @Test
+    void shinhanFallsBackToDesktopBridgeUrlForProductMissingFromSitemap() {
+        assertThat(new ShinhanBankScraper().fallbackUrl("110004301"))
+                .isEqualTo("https://bank.shinhan.com/bank_bridge.jsp?cr=020102010110&pcd=110004301");
     }
 }

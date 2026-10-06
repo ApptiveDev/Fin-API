@@ -25,6 +25,9 @@ public class ShinhanBankScraper extends AbstractBankProductScraper {
 
     private static final String SEARCH_URL = "https://bank.shinhan.com/index.jsp#020105010000";
     private static final String SITEMAP_URL = "https://m.shinhan.com/sitemap.xml";
+    // sitemap에 없는 상품용. cr은 화면 경로이고 상품은 pcd로 열린다(예금·적금·입출금 모두 같은 cr로 확인).
+    private static final String BRIDGE_URL = "https://bank.shinhan.com/bank_bridge.jsp?cr=020102010110&pcd=";
+    private static final double SEARCH_BOX_TIMEOUT_MILLIS = 15_000;
 
     @Override
     public String providerCode() {
@@ -42,15 +45,13 @@ public class ShinhanBankScraper extends AbstractBankProductScraper {
         List<ProductCandidate> candidates = new ArrayList<>();
         try (Page page = context.newPage()) {
             navigate(page, SEARCH_URL);
-            tryProductSearch(page, productName);
+            searchProduct(page, productName);
             settle(page);
             for (PageContent content : pageContents(page)) {
                 for (ProductCandidate codeCandidate : extractProductCodes(
                         Jsoup.parse(content.html(), content.url()), content.url()
                 )) {
-                    String url = urlsByProductCode.getOrDefault(
-                            codeCandidate.url(), fallbackMobileUrl(codeCandidate.url(), codeCandidate.name())
-                    );
+                    String url = urlsByProductCode.getOrDefault(codeCandidate.url(), fallbackUrl(codeCandidate.url()));
                     candidates.add(new ProductCandidate(codeCandidate.name(), url));
                 }
             }
@@ -93,12 +94,15 @@ public class ShinhanBankScraper extends AbstractBankProductScraper {
         return result;
     }
 
-    private void tryProductSearch(Page page, String productName) {
+    // 검색창이 늦게 뜨면 검색 없이 기본 목록(적금)에서 엉뚱한 후보를 고르게 된다. 끝내 뜨지 않으면 실패로 둔다.
+    private void searchProduct(Page page, String productName) {
+        Locator input = page.locator("#tbx_상품검색어").first();
         try {
-            Locator input = page.locator("#tbx_상품검색어").first();
-            if (input.count() == 0) {
-                return;
-            }
+            input.waitFor(new Locator.WaitForOptions().setTimeout(SEARCH_BOX_TIMEOUT_MILLIS));
+        } catch (PlaywrightException e) {
+            throw new IllegalStateException("Shinhan product search box did not appear", e);
+        }
+        try {
             input.fill(productName);
             Locator button = page.locator("#btn_검색").first();
             if (button.count() > 0) {
@@ -123,10 +127,8 @@ public class ShinhanBankScraper extends AbstractBankProductScraper {
         return "";
     }
 
-    private String fallbackMobileUrl(String productCode, String name) {
-        String pageCode = name.contains("적금") ? "PR0301S0100F01" : "PR0401S0000F01";
-        return "https://m.shinhan.com/mw/fin/pg/" + pageCode
-                + "?pid=" + productCode + "&type=now&hwno=";
+    String fallbackUrl(String productCode) {
+        return BRIDGE_URL + productCode;
     }
 
     private String queryValue(String url, String key) {
