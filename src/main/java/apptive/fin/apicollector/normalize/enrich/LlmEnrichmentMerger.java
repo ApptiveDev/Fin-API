@@ -1,5 +1,6 @@
 package apptive.fin.apicollector.normalize.enrich;
 
+import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.global.util.JsonNodes;
 import apptive.fin.apicollector.global.util.TextMatch;
 import apptive.fin.apicollector.llm.LlmProductEnrichment;
@@ -13,41 +14,42 @@ import apptive.fin.apicollector.product.ExtractionConfidence;
 import apptive.fin.apicollector.product.KeywordValueEnum;
 import apptive.fin.apicollector.product.ProductType;
 import apptive.fin.apicollector.product.RequiredKeywordEffect;
-import apptive.fin.apicollector.raw.ProductRaw;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * LLM enrichment 결과를 정규화 draft에 병합한다(기존 값 우선, 소득/우대금리/필수키워드 규칙 적용).
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class FssEnrichmentMerger {
+public class LlmEnrichmentMerger {
 
     private static final String[] INCOME_IRRELEVANT_PHRASES = {
             "소득공제", "소득세", "금융소득종합과세", "소득이체"
     };
     private static final String[] INCOME_TOKENS = {"소득", "총급여", "연봉"};
+    private static final Pattern PERCENT_PATTERN = Pattern.compile("(\\d+(?:\\.\\d+)?)\\s*%");
 
-    private final ObjectMapper objectMapper;
-
-    public ProductDraft merge(ProductRaw rawProduct, ProductDraft draft, LlmProductEnrichment enrichment) {
+    public ProductDraft merge(ProductDraft draft, LlmProductEnrichment enrichment) {
         List<ProductPropertyDraft> properties = new ArrayList<>();
-        String eligibilityText = eligibilityText(rawProduct);
+        String eligibilityText = eligibilityText(draft);
         boolean incomeMentioned = mentionsIncome(draft.content(), eligibilityText);
+        List<PreferentialRateDraft> enrichmentRates = draft.rawSource() == Source.KFB
+                ? percentGroundedRates(enrichment.preferentialRates(), draft.content())
+                : enrichment.preferentialRates();
         for (ProductPropertyDraft property : draft.properties()) {
-            properties.add(merge(property, enrichment, eligibilityText, draft.type(), incomeMentioned));
+            properties.add(merge(property, enrichment, enrichmentRates, eligibilityText, draft.type(), incomeMentioned));
         }
 
         return draft.toBuilder()
@@ -85,19 +87,44 @@ public class FssEnrichmentMerger {
         return normalized;
     }
 
+    // KFB 공시 실측에서 LLM이 최고금리-기본금리처럼 원문에 없는 금리를 계산하거나, 숫자 없이 나열된 조건에
+    // 금리를 지어내 배정하는 일이 반복됐다. 공시 본문에 "N%"로 적힌 숫자와 같은 금리만 받는다.
+    // 숫자만 대조하므로 지어낸 금리가 다른 조건의 숫자와 우연히 같으면 통과한다.
+    // FSS는 이 가드로 검증하지 않았으므로 적용하지 않는다.
+    private List<PreferentialRateDraft> percentGroundedRates(List<PreferentialRateDraft> rates, String content) {
+        Set<BigDecimal> writtenRates = new HashSet<>();
+        Matcher matcher = PERCENT_PATTERN.matcher(content == null ? "" : content);
+        while (matcher.find()) {
+            writtenRates.add(new BigDecimal(matcher.group(1)).stripTrailingZeros());
+        }
+
+        List<PreferentialRateDraft> result = new ArrayList<>();
+        for (PreferentialRateDraft rate : rates) {
+            if (writtenRates.contains(rate.rate().stripTrailingZeros())) {
+                result.add(rate);
+            }
+            else {
+                log.info("Dropping LLM preferential rate not written in disclosure. rate={}", rate);
+            }
+        }
+        return List.copyOf(result);
+    }
+
     private ProductPropertyDraft merge(
             ProductPropertyDraft property,
             LlmProductEnrichment enrichment,
+            List<PreferentialRateDraft> enrichmentRates,
             String eligibilityText,
             ProductType type,
             boolean incomeMentioned
     ) {
-        // 정기예금(DEPOSIT)은 월 납입 개념이 없다. min/maxMonthlyLimit은 월 납입액 전용 필드이므로
-        // 일시납 가입금액이 잘못 채워지지 않도록 null로 강제한다(LLM 준수 여부와 무관하게 보장).
+        // 월 납입 개념은 적금(SAVING)에만 있다. min/maxMonthlyLimit은 월 납입액 전용 필드이므로 정기예금의 일시납
+        // 가입금액이나 파킹통장의 예치한도가 잘못 채워지지 않도록 null로 강제한다(LLM 준수 여부와 무관하게 보장).
+        boolean isSaving = type == ProductType.SAVING;
         boolean isDeposit = type == ProductType.DEPOSIT;
         return property.toBuilder()
-                .minMonthlyLimit(isDeposit ? null : firstNonNull(property.minMonthlyLimit(), enrichment.minMonthlyLimit()))
-                .maxMonthlyLimit(isDeposit ? null : firstNonNull(property.maxMonthlyLimit(), enrichment.maxMonthlyLimit()))
+                .minMonthlyLimit(isSaving ? firstNonNull(property.minMonthlyLimit(), enrichment.minMonthlyLimit()) : null)
+                .maxMonthlyLimit(isSaving ? firstNonNull(property.maxMonthlyLimit(), enrichment.maxMonthlyLimit()) : null)
                 // minDepositAmount는 예금 전용 컬럼이다. 예금이면 결정적 값(수동입력) 우선, 없으면 LLM 값으로 채우고,
                 // 예금이 아니면 LLM이 채웠더라도 null로 강제한다(월 납입 가드와 대칭).
                 .minDepositAmount(isDeposit ? firstNonNull(property.minDepositAmount(), enrichment.minDepositAmount()) : null)
@@ -129,7 +156,7 @@ public class FssEnrichmentMerger {
                         property.requiredKeywords(),
                         filteredRequiredKeywords(enrichment.requiredKeywords(), eligibilityText)
                 ))
-                .preferentialRates(mergePreferentialRates(property.preferentialRates(), enrichment.preferentialRates()))
+                .preferentialRates(mergePreferentialRates(property.preferentialRates(), enrichmentRates))
                 .build();
     }
 
@@ -227,18 +254,12 @@ public class FssEnrichmentMerger {
         return TextMatch.containsAny(value, "제외", "가입 불가", "가입불가", "대상 아님", "대상아님", "불가능");
     }
 
-    private String eligibilityText(ProductRaw rawProduct) {
-        try {
-            JsonNode base = objectMapper.readTree(rawProduct.getRawJson()).path("base");
-            List<String> parts = new ArrayList<>();
-            addIfNotBlank(parts, JsonNodes.text(base, "join_member"));
-            addIfNotBlank(parts, JsonNodes.text(base, "etc_note"));
-            return String.join(" ", parts);
-        }
-        catch (Exception e) {
-            log.debug("Failed to parse FSS eligibility text. rawId={}", rawProduct.getId(), e);
-            return "";
-        }
+    // 신분 조건 근거 문구. 정규화기가 원문의 가입대상·유의사항을 draft에 담아 두므로 소스와 무관하게 여기서 읽는다.
+    private String eligibilityText(ProductDraft draft) {
+        List<String> parts = new ArrayList<>();
+        addIfNotBlank(parts, draft.eligibilityText());
+        addIfNotBlank(parts, draft.cautionText());
+        return String.join(" ", parts);
     }
 
     private void addIfNotBlank(List<String> values, String value) {

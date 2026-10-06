@@ -3,7 +3,7 @@ package apptive.fin.apicollector.config;
 import apptive.fin.apicollector.batch.RawProductItemReader;
 import apptive.fin.apicollector.tasklet.BankProductUrlTasklet;
 import apptive.fin.apicollector.normalize.dto.ProductDraft;
-import apptive.fin.apicollector.normalize.enrich.FssLlmProductDraftEnricher;
+import apptive.fin.apicollector.normalize.enrich.LlmProductDraftEnricher;
 import apptive.fin.apicollector.raw.ProductRaw;
 import apptive.fin.apicollector.tasklet.FetchKfbRawTasklet;
 import apptive.fin.apicollector.tasklet.FetchManualRawTasklet;
@@ -176,43 +176,29 @@ public class FinancialProductSyncJobConfig {
             ItemProcessor<ProductRaw, ProductDraft> rawProductItemProcessor,
             ItemWriter<ProductDraft> productDraftItemWriter,
             CollectorProperties properties,
-            TaskExecutor fssLlmExecutor,
-            FssLlmProductDraftEnricher fssLlmProductDraftEnricher
+            TaskExecutor llmExecutor,
+            LlmProductDraftEnricher llmProductDraftEnricher
     ) {
-        if (llmEnabled(properties)) {
-            AsyncItemProcessor<ProductRaw, ProductDraft> asyncProcessor =
-                    new AsyncItemProcessor<>(rawProductItemProcessor);
-            asyncProcessor.setTaskExecutor(fssLlmExecutor);
-
-            AsyncItemWriter<ProductDraft> asyncWriter = new AsyncItemWriter<>(productDraftItemWriter);
-
-            return new StepBuilder("normalizeFssRawProductStep", jobRepository)
-                    .<ProductRaw, Future<ProductDraft>>chunk(llmChunkSize(properties))
-                    .reader(fssRawProductItemReader)
-                    .processor(asyncProcessor)
-                    .writer(asyncWriter)
-                    .transactionManager(transactionManager)
-                    .listener(fssLlmProductDraftEnricher)
-                    .build();
-        }
-
-        return new StepBuilder("normalizeFssRawProductStep", jobRepository)
-                .<ProductRaw, ProductDraft>chunk(100)
-                .reader(fssRawProductItemReader)
-                .processor(rawProductItemProcessor)
-                .writer(productDraftItemWriter)
-                .transactionManager(transactionManager)
-                .listener(fssLlmProductDraftEnricher)
-                .build();
+        return llmNormalizeStep(
+                "normalizeFssRawProductStep",
+                jobRepository,
+                transactionManager,
+                fssRawProductItemReader,
+                rawProductItemProcessor,
+                productDraftItemWriter,
+                properties,
+                llmExecutor,
+                llmProductDraftEnricher
+        );
     }
 
     @Bean
-    public ThreadPoolTaskExecutor fssLlmExecutor(CollectorProperties properties) {
+    public ThreadPoolTaskExecutor llmExecutor(CollectorProperties properties) {
         int concurrency = llmMaxConcurrency(properties);
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(concurrency);
         executor.setMaxPoolSize(concurrency);
-        executor.setThreadNamePrefix("fss-llm-");
+        executor.setThreadNamePrefix("llm-");
         executor.setDaemon(true);
         return executor;
     }
@@ -240,15 +226,22 @@ public class FinancialProductSyncJobConfig {
             PlatformTransactionManager transactionManager,
             RawProductItemReader kfbRawProductItemReader,
             ItemProcessor<ProductRaw, ProductDraft> rawProductItemProcessor,
-            ItemWriter<ProductDraft> productDraftItemWriter
+            ItemWriter<ProductDraft> productDraftItemWriter,
+            CollectorProperties properties,
+            TaskExecutor llmExecutor,
+            LlmProductDraftEnricher llmProductDraftEnricher
     ) {
-        return new StepBuilder("normalizeKfbRawProductStep", jobRepository)
-                .<ProductRaw, ProductDraft>chunk(100)
-                .reader(kfbRawProductItemReader)
-                .processor(rawProductItemProcessor)
-                .writer(productDraftItemWriter)
-                .transactionManager(transactionManager)
-                .build();
+        return llmNormalizeStep(
+                "normalizeKfbRawProductStep",
+                jobRepository,
+                transactionManager,
+                kfbRawProductItemReader,
+                rawProductItemProcessor,
+                productDraftItemWriter,
+                properties,
+                llmExecutor,
+                llmProductDraftEnricher
+        );
     }
 
     @Bean
@@ -280,6 +273,45 @@ public class FinancialProductSyncJobConfig {
     ) {
         return new StepBuilder("resolveProductDisplayNameStep", jobRepository)
                 .tasklet(resolveProductDisplayNameTasklet, transactionManager)
+                .build();
+    }
+
+    // LLM 보강 소스의 정규화 step. LLM이 켜져 있으면 호출 지연을 숨기려고 item을 비동기로 처리한다.
+    private Step llmNormalizeStep(
+            String name,
+            JobRepository jobRepository,
+            PlatformTransactionManager transactionManager,
+            RawProductItemReader reader,
+            ItemProcessor<ProductRaw, ProductDraft> rawProductItemProcessor,
+            ItemWriter<ProductDraft> productDraftItemWriter,
+            CollectorProperties properties,
+            TaskExecutor llmExecutor,
+            LlmProductDraftEnricher llmProductDraftEnricher
+    ) {
+        if (llmEnabled(properties)) {
+            AsyncItemProcessor<ProductRaw, ProductDraft> asyncProcessor =
+                    new AsyncItemProcessor<>(rawProductItemProcessor);
+            asyncProcessor.setTaskExecutor(llmExecutor);
+
+            AsyncItemWriter<ProductDraft> asyncWriter = new AsyncItemWriter<>(productDraftItemWriter);
+
+            return new StepBuilder(name, jobRepository)
+                    .<ProductRaw, Future<ProductDraft>>chunk(llmChunkSize(properties))
+                    .reader(reader)
+                    .processor(asyncProcessor)
+                    .writer(asyncWriter)
+                    .transactionManager(transactionManager)
+                    .listener(llmProductDraftEnricher)
+                    .build();
+        }
+
+        return new StepBuilder(name, jobRepository)
+                .<ProductRaw, ProductDraft>chunk(100)
+                .reader(reader)
+                .processor(rawProductItemProcessor)
+                .writer(productDraftItemWriter)
+                .transactionManager(transactionManager)
+                .listener(llmProductDraftEnricher)
                 .build();
     }
 

@@ -7,7 +7,6 @@ import apptive.fin.apicollector.llm.*;
 import apptive.fin.apicollector.llm.cache.*;
 import apptive.fin.apicollector.normalize.dto.ProductDraft;
 import apptive.fin.apicollector.raw.ProductRaw;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.listener.StepExecutionListener;
@@ -16,25 +15,27 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * FSS 상품 draft를 LLM으로 보강하는 오케스트레이터.
+ * 상품 draft를 LLM으로 보강하는 오케스트레이터. 프롬프트 빌더가 등록된 소스(FSS, KFB)만 보강한다.
  * 프롬프트 생성/검증/병합/캐시는 각 협력자에 위임하고, 여기서는 흐름 제어와 배치 통계만 담당한다.
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class FssLlmProductDraftEnricher implements ProductDraftEnricher, StepExecutionListener {
+public class LlmProductDraftEnricher implements ProductDraftEnricher, StepExecutionListener {
 
     private static final Duration FAILED_RETRY_COOLDOWN = Duration.ofHours(6);
 
     private final CollectorProperties properties;
     private final List<LlmProviderClient> providerClients;
-    private final FssEnrichmentPromptBuilder promptBuilder;
+    private final Map<Source, EnrichmentPromptBuilder> promptBuilders;
     private final LlmEnrichmentValidator validator;
-    private final FssEnrichmentMerger merger;
+    private final LlmEnrichmentMerger merger;
     private final LlmEnrichmentCacheStore cacheStore;
 
     private final AtomicInteger cacheHits = new AtomicInteger();
@@ -42,6 +43,22 @@ public class FssLlmProductDraftEnricher implements ProductDraftEnricher, StepExe
     private final AtomicInteger llmFailures = new AtomicInteger();
     private final AtomicInteger cooldownSkips = new AtomicInteger();
     private final AtomicInteger invalidCacheEntries = new AtomicInteger();
+
+    public LlmProductDraftEnricher(
+            CollectorProperties properties,
+            List<LlmProviderClient> providerClients,
+            List<EnrichmentPromptBuilder> promptBuilders,
+            LlmEnrichmentValidator validator,
+            LlmEnrichmentMerger merger,
+            LlmEnrichmentCacheStore cacheStore
+    ) {
+        this.properties = properties;
+        this.providerClients = providerClients;
+        this.promptBuilders = bySource(promptBuilders);
+        this.validator = validator;
+        this.merger = merger;
+        this.cacheStore = cacheStore;
+    }
 
     @Override
     public void beforeStep(StepExecution stepExecution) {
@@ -55,7 +72,8 @@ public class FssLlmProductDraftEnricher implements ProductDraftEnricher, StepExe
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
         log.info(
-                "FSS LLM enrichment summary. cacheHits={}, llmCalls={}, llmFailures={}, cooldownSkips={}, invalidCache={}",
+                "LLM enrichment summary. step={}, cacheHits={}, llmCalls={}, llmFailures={}, cooldownSkips={}, invalidCache={}",
+                stepExecution.getStepName(),
                 cacheHits.get(),
                 llmCalls.get(),
                 llmFailures.get(),
@@ -67,7 +85,12 @@ public class FssLlmProductDraftEnricher implements ProductDraftEnricher, StepExe
 
     @Override
     public boolean supports(Source source) {
-        return source == Source.FSS;
+        return promptBuilders.containsKey(source);
+    }
+
+    /** LLM 보강 대상 소스. reader가 캐시 없는 raw를 다시 고를 때 같은 기준을 쓴다. */
+    public Set<Source> supportedSources() {
+        return promptBuilders.keySet();
     }
 
     @Override
@@ -77,7 +100,7 @@ public class FssLlmProductDraftEnricher implements ProductDraftEnricher, StepExe
         }
 
         LlmProviderClient providerClient = providerClient();
-        String prompt = promptBuilder.build(rawProduct, draft);
+        String prompt = promptBuilders.get(rawProduct.getSource()).build(rawProduct, draft);
         String requestHash = Sha256.hex(prompt);
         LlmEnrichmentCache cache = cacheStore.findOrCreate(rawProduct, requestHash);
 
@@ -85,12 +108,12 @@ public class FssLlmProductDraftEnricher implements ProductDraftEnricher, StepExe
                 && cache.getResponseJson() != null
                 && requestHash.equals(cache.getRequestHash())) {
             cacheHits.incrementAndGet();
-            return fromCache(cache, rawProduct, draft);
+            return fromCache(cache, draft);
         }
         if (cache.isFailedRetryBlocked(Instant.now(), FAILED_RETRY_COOLDOWN)) {
             cooldownSkips.incrementAndGet();
             log.debug(
-                    "Skipping FSS LLM enrichment during failed retry cooldown. rawId={}, externalId={}, failureCount={}",
+                    "Skipping LLM enrichment during failed retry cooldown. rawId={}, externalId={}, failureCount={}",
                     rawProduct.getId(),
                     rawProduct.getExternalId(),
                     cache.getFailureCount()
@@ -110,37 +133,45 @@ public class FssLlmProductDraftEnricher implements ProductDraftEnricher, StepExe
 
             cacheStore.saveSuccess(cache, requestHash, enrichment);
             log.info(
-                    "FSS LLM enrichment call. externalId={}, durationMs={}, outcome=SUCCESS",
+                    "LLM enrichment call. externalId={}, durationMs={}, outcome=SUCCESS",
                     rawProduct.getExternalId(),
                     Duration.between(callStart, Instant.now()).toMillis()
             );
-            return merger.merge(rawProduct, draft, enrichment);
+            return merger.merge(draft, enrichment);
         }
         catch (Exception e) {
             llmFailures.incrementAndGet();
             log.info(
-                    "FSS LLM enrichment call. externalId={}, durationMs={}, outcome=FAILED, exception={}",
+                    "LLM enrichment call. externalId={}, durationMs={}, outcome=FAILED, exception={}",
                     rawProduct.getExternalId(),
                     Duration.between(callStart, Instant.now()).toMillis(),
                     e.getClass().getSimpleName()
             );
-            log.warn("FSS LLM enrichment failed. rawId={}, externalId={}", rawProduct.getId(), rawProduct.getExternalId(), e);
+            log.warn("LLM enrichment failed. rawId={}, externalId={}", rawProduct.getId(), rawProduct.getExternalId(), e);
             cacheStore.saveFailed(cache, requestHash, truncate(e.getMessage()));
             return draft;
         }
     }
 
-    private ProductDraft fromCache(LlmEnrichmentCache cache, ProductRaw rawProduct, ProductDraft draft) {
+    private ProductDraft fromCache(LlmEnrichmentCache cache, ProductDraft draft) {
         try {
             LlmProductEnrichment enrichment = cacheStore.readEnrichment(cache);
             validator.validate(enrichment);
-            return merger.merge(rawProduct, draft, enrichment);
+            return merger.merge(draft, enrichment);
         }
         catch (Exception e) {
             invalidCacheEntries.incrementAndGet();
-            log.warn("FSS LLM enrichment cache is invalid. cacheId={}", cache.getId(), e);
+            log.warn("LLM enrichment cache is invalid. cacheId={}", cache.getId(), e);
             return draft;
         }
+    }
+
+    private static Map<Source, EnrichmentPromptBuilder> bySource(List<EnrichmentPromptBuilder> builders) {
+        Map<Source, EnrichmentPromptBuilder> result = new EnumMap<>(Source.class);
+        for (EnrichmentPromptBuilder builder : builders) {
+            result.put(builder.source(), builder);
+        }
+        return Map.copyOf(result);
     }
 
     private boolean enabled() {

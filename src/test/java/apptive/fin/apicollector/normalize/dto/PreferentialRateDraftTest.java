@@ -54,4 +54,12 @@ class PreferentialRateDraftTest {
         assertThat(draft(KeywordValueEnum.BANK_SALARY_TRANSFER, "관련 없는 조건").matchesKeywordCondition())
                 .isFalse();
     }
+
+    @Test
+    void firstTransaction_matchesSpacedWording() {
+        // 은행연합회 공시·LLM 응답은 "첫 거래", "순 신규"처럼 띄어 쓰는 경우가 많다(로컬 실측에서 파서가 전부 버렸다).
+        assertThat(draft(KeywordValueEnum.BANK_FIRST_TRANSACTION, "SC제일은행 첫 거래 고객").matchesKeywordCondition()).isTrue();
+        assertThat(draft(KeywordValueEnum.BANK_FIRST_TRANSACTION, "최초 거래 고객").matchesKeywordCondition()).isTrue();
+        assertThat(draft(KeywordValueEnum.BANK_FIRST_TRANSACTION, "은행 순 신규 고객 우대이율").matchesKeywordCondition()).isTrue();
+    }
 }

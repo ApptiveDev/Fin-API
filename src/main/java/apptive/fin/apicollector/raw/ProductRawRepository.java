@@ -29,7 +29,7 @@ public interface ProductRawRepository extends JpaRepository<ProductRaw, Long> {
                     or r.normalizerVersion < :normalizerVersion
                     or (
                         :llmEnrichmentEnabled = true
-                        and r.source = apptive.fin.apicollector.Source.FSS
+                        and r.source in :llmSources
                         and not exists (
                             select c.id
                             from apptive.fin.apicollector.llm.cache.LlmEnrichmentCache c
@@ -51,6 +51,7 @@ public interface ProductRawRepository extends JpaRepository<ProductRaw, Long> {
             @Param("lastSeenId") Long lastSeenId,
             @Param("normalizerVersion") int normalizerVersion,
             @Param("llmEnrichmentEnabled") boolean llmEnrichmentEnabled,
+            @Param("llmSources") Collection<Source> llmSources,
             @Param("llmProvider") String llmProvider,
             @Param("llmModel") String llmModel,
             @Param("llmPromptVersion") int llmPromptVersion,
