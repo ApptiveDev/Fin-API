@@ -10,7 +10,7 @@ Flyway는 **test scope에만** 존재해 Testcontainers Postgres에 스키마를
 
 ### Fin-BE submodule
 
-마이그레이션 SQL(`V1~V5`)은 `fin-be` 서브모듈의
+마이그레이션 SQL(`V*__*.sql`)은 `fin-be` 서브모듈의
 `fin-be/src/main/resources/db/migration/`에 있고, test용 Flyway가 이 경로를 참조한다
 (`src/test/resources/application-test.yml`의 `spring.flyway.locations`).
 

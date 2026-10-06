@@ -42,6 +42,15 @@ public class RestClientConfig {
                 .build();
     }
 
+    // 은행연합회 소비자포털은 키가 없는 공개 페이지라 설정으로 뺄 값이 없다.
+    @Bean
+    public RestClient kfbRestClient() {
+        return RestClient.builder()
+                .baseUrl("https://portal.kfb.or.kr")
+                .requestFactory(ClientHttpRequestFactoryBuilder.detect().build(FETCH_SETTINGS))
+                .build();
+    }
+
     @Bean
     public RestClient geminiRestClient() {
         return RestClient.builder()

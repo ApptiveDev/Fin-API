@@ -22,6 +22,7 @@ public class SourceDecider implements JobExecutionDecider {
             case ALL -> new FlowExecutionStatus("ALL");
             case FSS -> new FlowExecutionStatus("FSS");
             case ONTONG ->  new FlowExecutionStatus("ONTONG_YOUTH");
+            case KFB -> new FlowExecutionStatus("KFB");
         };
     }
 }
