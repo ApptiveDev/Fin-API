@@ -1,0 +1,38 @@
+name: Collector CI
+
+on:
+  pull_request:
+  # 수집 워크플로가 수집 전에 같은 ref로 호출한다. 테스트가 깨진 코드로는 DB에 쓰지 않기 위해서다.
+  workflow_call:
+    inputs:
+      ref:
+        description: "테스트할 브랜치. 비우면 이벤트의 ref"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+          # 테스트용 Flyway가 fin-be 서브모듈의 마이그레이션 SQL로 스키마를 만든다.
+          submodules: true
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Run tests
+        run: bash ./gradlew test
