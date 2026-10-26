@@ -71,6 +71,7 @@ jobs:
         # 서버 Postgres는 127.0.0.1:5678에만 열려 있다. IAP SSH 포트 포워딩으로 러너 15432에 연결한다.
         run: |
           gcloud compute ssh "$GCE_INSTANCE" --zone "$GCE_ZONE" --tunnel-through-iap --quiet \
+            --ssh-key-expire-after=1h \
             -- -f -N -o ExitOnForwardFailure=yes -L 15432:127.0.0.1:5678
           for _ in $(seq 1 30); do
             (echo > /dev/tcp/127.0.0.1/15432) 2>/dev/null && exit 0
