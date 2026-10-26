@@ -34,3 +34,14 @@ api-collector main에 박히는 포인터는 **Fin-BE main에 머지된 커밋**
 
 1. Fin-BE 스키마 변경을 main에 머지
 2. `git submodule update --remote fin-be` → 포인터 bump 후 커밋
+
+## 수집 워크플로 (`.github/workflows/collect.yml`)
+
+수집 배치는 서버가 아니라 GitHub Actions 러너에서 돈다(서버 e2-micro에는 Chromium을 띄울 여유가 없음).
+
+- 주기: LLM API 비용 때문에 약 2주 간격(매월 2·16일 04:00 KST). 그 사이에는 Actions에서 수동 실행(`workflow_dispatch`).
+- `main` → dev DB, `release` → 운영 DB. 운영은 레포 변수 `PROD_ENABLED=true`일 때만 돈다.
+- 수집 전에 같은 브랜치로 `ci.yml`(테스트)을 돌리고, 통과해야 수집한다.
+- 서버 접속: GCP OIDC 인증 → IAP SSH 포트 포워딩으로 서버 Postgres(`127.0.0.1:5678`)에 붙는다. 서버 구성과 GCP 설정은 Fin-BE `docs/implementation/deployment.md`.
+- GitHub Environment(`dev`, `prod`): vars `GCP_PROJECT`, `GCP_WIF_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `GCE_INSTANCE`, `GCE_ZONE` / secrets `POSTGRES_PASSWORD`, `FSS_API_KEY`, `GEMINI_API_KEY`.
+- **순서 제약**: 엔티티가 새 컬럼을 쓰면 Fin-BE가 그 마이그레이션을 해당 환경에 먼저 배포해야 한다. 아니면 `ddl-auto: validate`에서 수집이 실패한다.
