@@ -1,0 +1,40 @@
+name: Collect
+
+# 금융상품 수집 배치를 Actions 러너에서 돌려 서버 DB에 쓴다(서버 e2-micro에는 Chromium을 띄울 여유가 없다).
+# main → dev DB, release → 운영 DB. 설정은 CLAUDE.md의 "수집 워크플로" 참고.
+on:
+  schedule:
+    # LLM API가 유료라 약 2주 간격. 매월 1·15일 19:00 UTC = 2·16일 04:00 KST
+    - cron: "0 19 1,15 * *"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "수집 대상 환경"
+        type: choice
+        options: [dev, prod]
+        default: dev
+
+permissions:
+  contents: read
+
+jobs:
+  dev:
+    if: github.event_name == 'schedule' || inputs.environment == 'dev'
+    uses: ./.github/workflows/_collect.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: dev
+      ref: main
+
+  prod:
+    # 운영 서버와 release 브랜치가 준비되면 레포 변수 PROD_ENABLED=true로 켠다.
+    if: vars.PROD_ENABLED == 'true' && (github.event_name == 'schedule' || inputs.environment == 'prod')
+    uses: ./.github/workflows/_collect.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: prod
+      ref: release

@@ -1,0 +1,92 @@
+name: Collect (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "GitHub Environment (dev / prod)"
+        type: string
+        required: true
+      ref:
+        description: "수집에 쓸 브랜치"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  # 테스트가 깨진 코드로는 DB에 쓰지 않는다.
+  ci:
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ inputs.ref }}
+
+  collect:
+    name: Collect into ${{ inputs.environment }}
+    needs: ci
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 150
+    concurrency:
+      group: collect-${{ inputs.environment }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write   # GCP OIDC
+    env:
+      GCE_INSTANCE: ${{ vars.GCE_INSTANCE }}
+      GCE_ZONE: ${{ vars.GCE_ZONE }}
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Install Chromium for bank URL scraping
+        run: |
+          bash ./gradlew playwrightInstall
+          npx -y playwright@1.61.0 install-deps chromium
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Open DB tunnel
+        # 서버 Postgres는 127.0.0.1:5678에만 열려 있다. IAP SSH 포트 포워딩으로 러너 15432에 연결한다.
+        run: |
+          gcloud compute ssh "$GCE_INSTANCE" --zone "$GCE_ZONE" --tunnel-through-iap --quiet \
+            --ssh-key-expire-after=1h \
+            -- -f -N -o ExitOnForwardFailure=yes -L 15432:127.0.0.1:5678
+          for _ in $(seq 1 30); do
+            (echo > /dev/tcp/127.0.0.1/15432) 2>/dev/null && exit 0
+            sleep 1
+          done
+          echo "DB tunnel did not open" >&2
+          exit 1
+
+      - name: Run collector
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://127.0.0.1:15432/database
+          SPRING_DATASOURCE_USERNAME: user
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          FSS_API_KEY: ${{ secrets.FSS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LLM_ENABLED: "true"
+        # 배치가 FAILED면 0이 아닌 코드로 끝나 이 단계가 실패한다(ApiCollectorApplication.main).
+        run: bash ./gradlew bootRun
