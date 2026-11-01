@@ -85,15 +85,40 @@ class YouthPolicyParserTest {
     }
 
     @Test
-    void 금융지원_분류가_아니면_건너뛴다() {
-        assertThat(parser.parse(policy(Map.of("aplyPrdSeCd", "0057002", "mclsfNm", "취업")))).isEmpty();
+    void 이름에_저축_공제_신용회복_키워드가_있으면_포함한다() {
+        assertThat(named("전북청년 함께 두배적금")).isPresent();
+        assertThat(named("청년내일저축계좌")).isPresent();
+        assertThat(named("광주형 청년일자리 공제")).isPresent();
+        assertThat(named("청년근로자 사랑채움사업")).isPresent();
+        assertThat(named("청년 특례 채무조정")).isPresent();
+        assertThat(named("학자금 대출 신용 회복 지원")).isPresent();
+        assertThat(named("2026년 청년 학자금대출 장기연체자 지원사업")).isPresent();
     }
 
-    // 분류가 여러 개면 쉼표로 이어져 온다.
+    // 2026-11 실제 데이터에서 걸러야 했던 이름들
     @Test
-    void 여러_분류_중_금융지원이_있으면_포함한다() {
-        assertThat(parser.parse(policy(Map.of("aplyPrdSeCd", "0057002", "mclsfNm", "건강,취약계층 및 금융지원"))))
+    void 범위_밖_정책은_건너뛴다() {
+        assertThat(named("출산육아수당 지원")).isEmpty();
+        assertThat(named("청년·대학생 햇살론(햇살론유스)")).isEmpty();
+        assertThat(named("소프트웨어(SW) 미래채움 사업")).isEmpty();
+        assertThat(named("취업성공 디딤돌 청년인턴 사업")).isEmpty();
+    }
+
+    // PRD는 주거 정책을 뺀다. 저축·이자 지원이라도 주거 목적이면 제외한다.
+    @Test
+    void 주거_정책은_건너뛴다() {
+        assertThat(named("청년주택드림청약통장")).isEmpty();
+        assertThat(named("신혼부부 전세자금 대출이자 지원사업")).isEmpty();
+        assertThat(named("신혼부부 임차보증금 이자지원")).isEmpty();
+    }
+
+    // 온통청년 분류와 관계없이 이름으로 고른다. 내일채움공제는 '재직자', 학자금 신용회복은 '교육비지원' 분류에 있다.
+    @Test
+    void 온통청년_분류와_관계없이_이름으로_고른다() {
+        assertThat(parser.parse(policy(Map.of("aplyPrdSeCd", "0057002", "plcyNm", "대구형 청년 그린 내일채움공제", "mclsfNm", "재직자"))))
                 .isPresent();
+        assertThat(parser.parse(policy(Map.of("aplyPrdSeCd", "0057002", "plcyNm", "취업청년 정착수당", "mclsfNm", "취약계층 및 금융지원"))))
+                .isEmpty();
     }
 
     @Test
@@ -109,6 +134,10 @@ class YouthPolicyParserTest {
                 "aplyPrdSeCd", "0057002", "sprvsnInstCdNm", "", "rgtrInstCdNm", "금융위원회")));
 
         assertThat(draft.orElseThrow().institution()).isEqualTo("금융위원회");
+    }
+
+    private Optional<YouthPolicyDraft> named(String name) {
+        return parser.parse(policy(Map.of("aplyPrdSeCd", "0057002", "plcyNm", name)));
     }
 
     private static JsonNode policy(Map<String, String> overrides) {
