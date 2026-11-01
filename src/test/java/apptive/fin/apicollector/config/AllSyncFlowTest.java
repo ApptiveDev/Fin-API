@@ -66,7 +66,8 @@ class AllSyncFlowTest extends IntegrationTestSupport {
                 "normalizeFssRawProductStep",
                 "normalizeKfbRawProductStep",
                 "bankProductUrlStep",
-                "resolveProductDisplayNameStep"
+                "resolveProductDisplayNameStep",
+                "syncYouthPolicyStep"
         );
         verify(productSyncService).disableAllUnseenProducts(eq(Source.ONTONG), any());
         verify(productSyncService).disableAllUnseenProducts(eq(Source.FSS), any());
@@ -93,6 +94,7 @@ class AllSyncFlowTest extends IntegrationTestSupport {
                 step("deactivateMissingProductStep", new DeactivateMissingProductTasklet(productSyncService, allSyncProperties())),
                 recording("bankProductUrlStep"),
                 recording("resolveProductDisplayNameStep"),
+                recording("syncYouthPolicyStep"),
                 step("failIfAnyStepFailedStep", new FailIfAnyStepFailedTasklet())
         );
         Job job = new JobBuilder("allSyncFlowTestJob", jobRepository).start(flow).end().build();
