@@ -21,6 +21,8 @@ jobs:
   dev:
     if: github.event_name == 'schedule' || inputs.environment == 'dev'
     uses: ./.github/workflows/_collect.yml
+    # 재사용 워크플로는 job에 environment를 지정해도, 호출 쪽에서 inherit해야 Environment 시크릿을 받는다.
+    secrets: inherit
     permissions:
       contents: read
       id-token: write
@@ -32,6 +34,7 @@ jobs:
     # 운영 서버와 release 브랜치가 준비되면 레포 변수 PROD_ENABLED=true로 켠다.
     if: vars.PROD_ENABLED == 'true' && (github.event_name == 'schedule' || inputs.environment == 'prod')
     uses: ./.github/workflows/_collect.yml
+    secrets: inherit
     permissions:
       contents: read
       id-token: write
