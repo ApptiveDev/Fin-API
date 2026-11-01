@@ -68,7 +68,7 @@ class SyncYouthPolicyTaskletTest {
 
     private SyncYouthPolicyTasklet tasklet(Mode mode) {
         CollectorProperties properties = new CollectorProperties(
-                true, Source.YOUTH_POLICY, mode, 1, 100, 1, null, null, null);
+                true, Source.CALENDAR, mode, 1, 100, 1, null, null, null);
         return new SyncYouthPolicyTasklet(client, parser, syncService, properties);
     }
 

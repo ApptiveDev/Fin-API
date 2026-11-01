@@ -67,6 +67,7 @@ class AllSyncFlowTest extends IntegrationTestSupport {
                 "normalizeKfbRawProductStep",
                 "bankProductUrlStep",
                 "resolveProductDisplayNameStep",
+                "syncPolicyProductRoundStep",
                 "syncYouthPolicyStep"
         );
         verify(productSyncService).disableAllUnseenProducts(eq(Source.ONTONG), any());
@@ -94,6 +95,7 @@ class AllSyncFlowTest extends IntegrationTestSupport {
                 step("deactivateMissingProductStep", new DeactivateMissingProductTasklet(productSyncService, allSyncProperties())),
                 recording("bankProductUrlStep"),
                 recording("resolveProductDisplayNameStep"),
+                recording("syncPolicyProductRoundStep"),
                 recording("syncYouthPolicyStep"),
                 step("failIfAnyStepFailedStep", new FailIfAnyStepFailedTasklet())
         );

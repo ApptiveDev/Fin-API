@@ -75,7 +75,7 @@ class OntongYouthClientTest {
 
     private static CollectorProperties properties() {
         return new CollectorProperties(
-                true, Source.YOUTH_POLICY, Mode.SYNC, 1, 100, 1,
+                true, Source.CALENDAR, Mode.SYNC, 1, 100, 1,
                 new CollectorProperties.OntongYouth("http://localhost", "secret-key", PAGE_SIZE),
                 null, null);
     }
