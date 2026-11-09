@@ -2,6 +2,8 @@ package apptive.fin.apicollector.tasklet;
 
 import apptive.fin.apicollector.client.OntongYouthClient;
 import apptive.fin.apicollector.config.CollectorProperties;
+import apptive.fin.apicollector.youthpolicy.PolicyProductMatcher;
+import apptive.fin.apicollector.youthpolicy.PolicyProductMatcher.PolicyProduct;
 import apptive.fin.apicollector.youthpolicy.YouthPolicyDraft;
 import apptive.fin.apicollector.youthpolicy.YouthPolicyParser;
 import apptive.fin.apicollector.youthpolicy.YouthPolicySyncService;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +33,7 @@ public class SyncYouthPolicyTasklet implements Tasklet {
     private final OntongYouthClient ontongYouthClient;
     private final YouthPolicyParser youthPolicyParser;
     private final YouthPolicySyncService youthPolicySyncService;
+    private final PolicyProductMatcher policyProductMatcher;
     private final CollectorProperties properties;
 
     @Override
@@ -51,11 +55,30 @@ public class SyncYouthPolicyTasklet implements Tasklet {
                     "No youth policy in calendar scope. fetched=" + policies.size());
         }
 
-        SyncResult result = youthPolicySyncService.sync(drafts, Instant.now());
+        List<YouthPolicyDraft> calendarDrafts = excludePolicyProducts(drafts);
+        SyncResult result = youthPolicySyncService.sync(calendarDrafts, Instant.now());
         log.info(
-                "SyncYouthPolicyTasklet: fetched={}, inScope={}, inserted={}, updated={}, deactivated={}",
-                policies.size(), drafts.size(), result.inserted(), result.updated(), result.deactivated()
+                "SyncYouthPolicyTasklet: fetched={}, inScope={}, sameAsPolicyProduct={}, inserted={}, updated={}, deactivated={}",
+                policies.size(), drafts.size(), drafts.size() - calendarDrafts.size(),
+                result.inserted(), result.updated(), result.deactivated()
         );
         return RepeatStatus.FINISHED;
+    }
+
+    // 1계층 정책상품과 같은 사업은 2계층에 넣지 않는다. 시군 별도 모집처럼 회차가 1계층과 다를 수 있어
+    // manual-product-rounds.json을 고칠 때 볼 수 있게 회차를 함께 남긴다.
+    private List<YouthPolicyDraft> excludePolicyProducts(List<YouthPolicyDraft> drafts) {
+        List<YouthPolicyDraft> kept = new ArrayList<>();
+        for (YouthPolicyDraft draft : drafts) {
+            Optional<PolicyProduct> product = policyProductMatcher.match(draft.name());
+            if (product.isPresent()) {
+                log.info("SyncYouthPolicyTasklet: same as policy product, skipped. productCode={}, plcyNo={}, plcyNm={}, institution={}, rounds={}",
+                        product.get().productCode(), draft.policyNo(), draft.name(), draft.institution(), draft.rounds());
+            }
+            else {
+                kept.add(draft);
+            }
+        }
+        return kept;
     }
 }

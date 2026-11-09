@@ -5,6 +5,8 @@ import apptive.fin.apicollector.Source;
 import apptive.fin.apicollector.client.OntongYouthClient;
 import apptive.fin.apicollector.config.CollectorProperties;
 import apptive.fin.apicollector.youthpolicy.ApplyPeriodType;
+import apptive.fin.apicollector.youthpolicy.PolicyProductMatcher;
+import apptive.fin.apicollector.youthpolicy.PolicyProductMatcher.PolicyProduct;
 import apptive.fin.apicollector.youthpolicy.YouthPolicyDraft;
 import apptive.fin.apicollector.youthpolicy.YouthPolicyParser;
 import apptive.fin.apicollector.youthpolicy.YouthPolicySyncService;
@@ -31,6 +33,8 @@ class SyncYouthPolicyTaskletTest {
     // 범위·필드 해석은 YouthPolicyParserTest가 본다. 여기서는 tasklet이 파서 판정을 따르는지만 본다.
     private final YouthPolicyParser parser = mock(YouthPolicyParser.class);
     private final YouthPolicySyncService syncService = mock(YouthPolicySyncService.class);
+    private final PolicyProductMatcher matcher = new PolicyProductMatcher(
+            List.of(new PolicyProduct("POLICY001", "청년내일저축계좌")));
 
     @Test
     void 범위_안의_정책만_저장한다() {
@@ -45,6 +49,22 @@ class SyncYouthPolicyTaskletTest {
         tasklet(Mode.SYNC).execute(null, null);
 
         verify(syncService).sync(eq(List.of(draft)), any());
+    }
+
+    // 2계층은 Y-Fin 상품 DB에 없는 정책만 보여준다. 이미 저장된 같은 정책은 sync가 비활성화한다.
+    @Test
+    void 정책상품과_같은_사업은_저장하지_않는다() {
+        JsonNode sameAsProduct = MAPPER.createObjectNode().put("plcyNo", "A");
+        JsonNode other = MAPPER.createObjectNode().put("plcyNo", "B");
+        YouthPolicyDraft otherDraft = draft("B", "청년 특례 채무조정");
+        when(client.fetchAll()).thenReturn(List.of(sameAsProduct, other));
+        when(parser.parse(sameAsProduct)).thenReturn(Optional.of(draft("A", "부산 청년내일저축계좌")));
+        when(parser.parse(other)).thenReturn(Optional.of(otherDraft));
+        when(syncService.sync(any(), any())).thenReturn(new YouthPolicySyncService.SyncResult(1, 0, 0));
+
+        tasklet(Mode.SYNC).execute(null, null);
+
+        verify(syncService).sync(eq(List.of(otherDraft)), any());
     }
 
     // 응답 형식이나 분류 이름이 바뀌어 0건이 되면 저장된 정책이 전부 비활성화되지 않게 실패시킨다.
@@ -69,10 +89,14 @@ class SyncYouthPolicyTaskletTest {
     private SyncYouthPolicyTasklet tasklet(Mode mode) {
         CollectorProperties properties = new CollectorProperties(
                 true, Source.CALENDAR, mode, 1, 100, 1, null, null, null);
-        return new SyncYouthPolicyTasklet(client, parser, syncService, properties);
+        return new SyncYouthPolicyTasklet(client, parser, syncService, matcher, properties);
     }
 
     private static YouthPolicyDraft draft(String policyNo) {
-        return new YouthPolicyDraft(policyNo, "정책", null, null, null, null, null, ApplyPeriodType.ALWAYS, List.of());
+        return draft(policyNo, "정책");
+    }
+
+    private static YouthPolicyDraft draft(String policyNo, String name) {
+        return new YouthPolicyDraft(policyNo, name, null, null, null, null, null, ApplyPeriodType.ALWAYS, List.of());
     }
 }
