@@ -9,6 +9,8 @@ import apptive.fin.apicollector.raw.ProductRaw;
 import apptive.fin.apicollector.tasklet.FetchKfbRawTasklet;
 import apptive.fin.apicollector.tasklet.FetchManualRawTasklet;
 import apptive.fin.apicollector.tasklet.ResolveProductDisplayNameTasklet;
+import apptive.fin.apicollector.tasklet.SyncPolicyProductRoundTasklet;
+import apptive.fin.apicollector.tasklet.SyncYouthPolicyTasklet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.FlowBuilder;
@@ -44,6 +46,7 @@ public class FinancialProductSyncJobConfig {
         Flow fssSyncFlow,
         Flow ontongYouthSyncFlow,
         Flow kfbSyncFlow,
+        Flow calendarSyncFlow,
         Flow allSyncFlow
     ) {
         return new JobBuilder("financialProductSyncJob", jobRepository)
@@ -54,6 +57,8 @@ public class FinancialProductSyncJobConfig {
                     .on("ONTONG_YOUTH").to(ontongYouthSyncFlow)
                 .from(sourceDecider)
                     .on("KFB").to(kfbSyncFlow)
+                .from(sourceDecider)
+                    .on("CALENDAR").to(calendarSyncFlow)
                 .from(sourceDecider)
                     .on("ALL").to(allSyncFlow)
                 .end()
@@ -90,6 +95,38 @@ public class FinancialProductSyncJobConfig {
     ) {
         return new StepBuilder(FetchKfbRawTasklet.STEP_NAME, jobRepository)
                 .tasklet(fetchKfbRawTasklet, transactionManager)
+                .build();
+    }
+
+    // 정책 목록 조회와 저장을 한 트랜잭션에 묶지 않는다. 저장은 YouthPolicySyncService가 트랜잭션을 연다.
+    @Bean
+    public Step syncYouthPolicyStep(
+            JobRepository jobRepository,
+            SyncYouthPolicyTasklet syncYouthPolicyTasklet
+    ) {
+        return new StepBuilder(SyncYouthPolicyTasklet.STEP_NAME, jobRepository)
+                .tasklet(syncYouthPolicyTasklet, new ResourcelessTransactionManager())
+                .build();
+    }
+
+    @Bean
+    public Step syncPolicyProductRoundStep(
+            JobRepository jobRepository,
+            PlatformTransactionManager transactionManager,
+            SyncPolicyProductRoundTasklet syncPolicyProductRoundTasklet
+    ) {
+        return new StepBuilder(SyncPolicyProductRoundTasklet.STEP_NAME, jobRepository)
+                .tasklet(syncPolicyProductRoundTasklet, transactionManager)
+                .build();
+    }
+
+    // B1 캘린더는 하루 1회 이상 갱신해야 해서 상품 수집과 따로 돌릴 수 있게 둔다.
+    // 정책상품 회차는 로컬 파일이라 온통청년 호출보다 먼저 둔다.
+    @Bean
+    public Flow calendarSyncFlow(Step syncPolicyProductRoundStep, Step syncYouthPolicyStep) {
+        return new FlowBuilder<Flow>("calendarSyncFlow")
+                .start(syncPolicyProductRoundStep)
+                .next(syncYouthPolicyStep)
                 .build();
     }
 
@@ -154,8 +191,12 @@ public class FinancialProductSyncJobConfig {
             Step deactivateMissingProductStep,
             Step bankProductUrlStep,
             Step resolveProductDisplayNameStep,
+            Step syncPolicyProductRoundStep,
+            Step syncYouthPolicyStep,
             Step failIfAnyStepFailedStep
     ) {
+        // 캘린더는 맨 뒤에 둔다. 정책상품 회차는 정부상품 정규화 뒤라야 상품을 찾을 수 있고,
+        // 온통청년이 실패해도 상품 수집은 이미 끝나 있다.
         // KFB는 외부 HTML 스크래핑이라 깨지기 쉽다. 실패해도 다른 소스는 끝까지 돌리고(KFB 비활성화는
         // DeactivateMissingProductTasklet이 건너뜀), 마지막 step에서 잡을 FAILED로 끝내 실패를 드러낸다.
         return new FlowBuilder<Flow>("allSyncFlow")
@@ -170,6 +211,8 @@ public class FinancialProductSyncJobConfig {
                 .next(deactivateMissingProductStep)
                 .next(bankProductUrlStep)
                 .next(resolveProductDisplayNameStep)
+                .next(syncPolicyProductRoundStep)
+                .next(syncYouthPolicyStep)
                 .next(failIfAnyStepFailedStep)
                 .build();
     }
