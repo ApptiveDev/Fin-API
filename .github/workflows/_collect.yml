@@ -11,6 +11,10 @@ on:
         description: "수집에 쓸 브랜치"
         type: string
         required: true
+      source:
+        description: "수집 소스(collector.source). ALL / CALENDAR 등"
+        type: string
+        default: ALL
 
 permissions:
   contents: read
@@ -23,7 +27,7 @@ jobs:
       ref: ${{ inputs.ref }}
 
   collect:
-    name: Collect into ${{ inputs.environment }}
+    name: Collect ${{ inputs.source }} into ${{ inputs.environment }}
     needs: ci
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
@@ -53,6 +57,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Install Chromium for bank URL scraping
+        # 캘린더 수집은 은행 URL 스크래핑을 하지 않는다.
+        if: inputs.source != 'CALENDAR'
         run: |
           bash ./gradlew playwrightInstall
           npx -y playwright@1.61.0 install-deps chromium
@@ -85,7 +91,9 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://127.0.0.1:15432/database
           SPRING_DATASOURCE_USERNAME: user
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          COLLECTOR_SOURCE: ${{ inputs.source }}
           FSS_API_KEY: ${{ secrets.FSS_API_KEY }}
+          ONTONG_YOUTH_API_KEY: ${{ secrets.ONTONG_YOUTH_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LLM_ENABLED: "true"
         # 배치가 FAILED면 0이 아닌 코드로 끝나 이 단계가 실패한다(ApiCollectorApplication.main).
