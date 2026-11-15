@@ -86,7 +86,7 @@ public class BankProductUrlTasklet implements Tasklet {
         return switch (collectorProperties.source()) {
             case ALL -> List.of(Source.FSS.name(), Source.KFB.name());
             case FSS, KFB -> List.of(collectorProperties.source().name());
-            case ONTONG -> List.of();
+            case ONTONG, CALENDAR -> List.of();
         };
     }
 
