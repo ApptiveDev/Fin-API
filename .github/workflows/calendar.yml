@@ -1,0 +1,45 @@
+name: Calendar
+
+# B1 캘린더 데이터(정책상품 회차, 온통청년 청년정책)만 매일 갱신한다(COLLECTOR_SOURCE=CALENDAR).
+# PRD: 하루 1회 이상 수집하고 B2 알림 메일(09:00 KST) 발송 전에 끝낸다.
+# LLM·은행 스크래핑을 쓰지 않아 매일 돌려도 API 비용이 없다. 설정은 CLAUDE.md의 "수집 워크플로" 참고.
+on:
+  schedule:
+    # 20:17 UTC = 05:17 KST. 정각은 Actions 스케줄이 몰려 늦게 시작하는 일이 많아 피한다.
+    # 2주 수집(collect.yml, 04:00 KST)과 겹치면 collect-<env> 동시 실행 그룹에서 그 뒤에 돈다.
+    - cron: "17 20 * * *"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "수집 대상 환경"
+        type: choice
+        options: [dev, prod]
+        default: dev
+
+permissions:
+  contents: read
+
+jobs:
+  dev:
+    if: github.event_name == 'schedule' || inputs.environment == 'dev'
+    uses: ./.github/workflows/_collect.yml
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: dev
+      ref: main
+      source: CALENDAR
+
+  prod:
+    if: vars.PROD_ENABLED == 'true' && (github.event_name == 'schedule' || inputs.environment == 'prod')
+    uses: ./.github/workflows/_collect.yml
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: prod
+      ref: release
+      source: CALENDAR
