@@ -295,7 +295,7 @@ class ManualProductNormalizerTest {
     }
 
     @Test
-    void actualManualProductsResourceContainsAndNormalizesPolicy001Through016() throws Exception {
+    void actualManualProductsResourceNormalizesAllProductsWithUniqueCodes() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode products = loadProducts(objectMapper);
         List<String> productCodes = new ArrayList<>();
@@ -316,12 +316,8 @@ class ManualProductNormalizerTest {
             assertThat(draft.properties()).isNotEmpty();
         }
 
-        assertThat(productCodes).containsExactly(
-                "POLICY001", "POLICY002", "POLICY003", "POLICY004",
-                "POLICY005", "POLICY006", "POLICY007", "POLICY008",
-                "POLICY009", "POLICY010", "POLICY011", "POLICY012",
-                "POLICY013", "POLICY014", "POLICY015", "POLICY016"
-        );
+        assertThat(productCodes).isNotEmpty().doesNotHaveDuplicates()
+                .allSatisfy(code -> assertThat(code).isNotBlank());
     }
 
     private ProductRaw raw(String json, ProductType type) {

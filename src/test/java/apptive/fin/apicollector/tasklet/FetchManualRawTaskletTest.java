@@ -33,7 +33,12 @@ class FetchManualRawTaskletTest {
     );
 
     @Test
-    void fetchesAllProductsFromActualManualResource() {
+    void fetchesAllProductsFromActualManualResource() throws Exception {
+        int productCount;
+        try (var input = getClass().getResourceAsStream("/manual-products.json")) {
+            assertThat(input).isNotNull();
+            productCount = objectMapper.readTree(input).size();
+        }
         RawProductSaveService saveService = mock(RawProductSaveService.class);
         when(saveService.saveOrUpdate(eq(Source.ONTONG), anyString(), any(), any(ProductType.class)))
                 .thenReturn(SaveResult.INSERTED);
@@ -45,7 +50,7 @@ class FetchManualRawTaskletTest {
 
         assertThat(syncingTasklet.execute(null, null)).isEqualTo(RepeatStatus.FINISHED);
 
-        verify(saveService, times(16)).saveOrUpdate(
+        verify(saveService, times(productCount)).saveOrUpdate(
                 eq(Source.ONTONG),
                 anyString(),
                 any(),

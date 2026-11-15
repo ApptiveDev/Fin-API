@@ -49,7 +49,7 @@
         "militaryMaxAge": 40,
         "earnMaxAmt": 60000000,
         "earnPercent": 200,
-        "keywords": ["BENEFIT_GOV_SUBSIDY"]
+        "keywords": ["BENEFIT_GOV_SUBSIDY", "BENEFIT_TAX_FREE"]
       },
       {
         "variantCode": "PREFERENTIAL",
@@ -69,7 +69,7 @@
         "militaryMaxAge": 40,
         "earnMaxAmt": 36000000,
         "earnPercent": 150,
-        "keywords": ["BENEFIT_GOV_SUBSIDY"]
+        "keywords": ["BENEFIT_GOV_SUBSIDY", "BENEFIT_TAX_FREE"]
       }
     ]
   },
@@ -436,6 +436,33 @@
         "minAge": 19,
         "maxAge": 49,
         "keywords": ["BENEFIT_GOV_SUBSIDY", "REGION_GYEONGNAM"]
+      }
+    ]
+  },
+  {
+    "productCode": "POLICY017",
+    "productName": "장병내일준비적금",
+    "content": "매칭 유형: 정률 1:1 | 본인 부담금: 전 금융기관 합산 월 최대 55만 원 자유 납입 | 매칭 기여금: 2024년 이후 납입 원금의 100% | 요건 충족 시 이자소득 비과세",
+    "joinMethod": "나라사랑포털 앱을 통한 비대면 가입 또는 취급은행 방문 가입",
+    "eligibilityText": "현역병, 상근예비역, 사회복무요원, 대체복무요원 등 병역의무 이행자. 가입 당시 잔여 복무기간 1개월 이상",
+    "cautionText": "가입기간은 잔여 복무기간에 따라 다름. 1인 최대 2개 은행, 은행별 월 최대 30만 원·합산 월 최대 55만 원. 일반 중도해지 시 이자소득 비과세 및 매칭지원금 미지급. 조기전역 등 예외와 해지 제출서류는 공식 안내 확인. 조세특례제한법상 비과세 가입기한은 2026년 12월 31일",
+    "properties": [
+      {
+        "providerCode": "MND",
+        "providerName": "국방부",
+        "applyUrl": "https://www.mnd.go.kr/mnd/288/subview.do",
+        "govContributionType": "RATIO",
+        "govMatchingRatio": 1.0000,
+        "excludeFromRateComparison": true,
+        "maxMonthlyLimit": 550000,
+        "keywords": ["BENEFIT_GOV_SUBSIDY", "BENEFIT_TAX_FREE"],
+        "requiredKeywords": [
+          {
+            "keywordCode": "STATUS_MILITARY",
+            "effect": "REQUIRE",
+            "confidence": "HIGH"
+          }
+        ]
       }
     ]
   }
